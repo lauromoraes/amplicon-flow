@@ -1,0 +1,16 @@
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.ruff_cache/
+.ipynb_checkpoints/
+.env
+.venv/
+.tmp/
+tmp/
+experiments/
+data/
+classifiers/
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db

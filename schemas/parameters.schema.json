@@ -1,0 +1,80 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "AmpliconFlow experiment parameters",
+  "type": "object",
+  "required": [
+    "experiment_name",
+    "base_dir",
+    "inputs",
+    "pipeline"
+  ],
+  "properties": {
+    "experiment_name": {
+      "type": "string",
+      "minLength": 1,
+      "pattern": "^[A-Za-z0-9._-]+$"
+    },
+    "base_dir": {
+      "type": "string",
+      "minLength": 1
+    },
+    "inputs": {
+      "type": "object",
+      "required": [
+        "metadata_file",
+        "manifest_file"
+      ],
+      "properties": {
+        "metadata_file": {
+          "type": "string",
+          "minLength": 1
+        },
+        "manifest_file": {
+          "type": "string",
+          "minLength": 1
+        }
+      },
+      "additionalProperties": true
+    },
+    "resources": {
+      "type": "object",
+      "properties": {
+        "threads": {
+          "type": "integer",
+          "minimum": 1
+        }
+      },
+      "additionalProperties": true
+    },
+    "pipeline": {
+      "type": "object",
+      "required": [
+        "steps"
+      ],
+      "properties": {
+        "steps": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "enum": [
+              "prepare-data",
+              "quality-control",
+              "rarefaction-analysis",
+              "metataxonomy",
+              "diversity-analysis",
+              "abundance-analysis",
+              "lefse-analysis",
+              "picrust2-analysis",
+              "ancombc2-analysis",
+              "report"
+            ]
+          }
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": true
+}

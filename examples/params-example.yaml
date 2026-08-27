@@ -1,0 +1,27 @@
+experiment_name: example-study
+base_dir: .
+
+inputs:
+  metadata_file: data/metadata.tsv
+  manifest_file: data/manifest.csv
+
+sequencing:
+  read_layout: paired-end
+
+resources:
+  threads: 8
+
+pipeline:
+  steps:
+    - prepare-data
+    - quality-control
+
+quality_control:
+  phred: 20
+  trunc_f: 0
+  trunc_r: 0
+  overlap: 12
+  replace_files: false
+
+taxonomy:
+  classifier_file: classifiers/silva-138.2-v3v4-341f-806r-nb-classifier.qza

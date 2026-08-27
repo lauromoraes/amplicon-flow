@@ -1,0 +1,17 @@
+LICENSE
+README.md
+pyproject.toml
+src/ampliconflow/__init__.py
+src/ampliconflow/cli.py
+src/ampliconflow/config.py
+src/ampliconflow/environment.py
+src/ampliconflow/paths.py
+src/ampliconflow/provenance.py
+src/ampliconflow.egg-info/PKG-INFO
+src/ampliconflow.egg-info/SOURCES.txt
+src/ampliconflow.egg-info/dependency_links.txt
+src/ampliconflow.egg-info/entry_points.txt
+src/ampliconflow.egg-info/requires.txt
+src/ampliconflow.egg-info/top_level.txt
+tests/test_config.py
+tests/test_notebooks.py

@@ -1,0 +1,13 @@
+Metadata-Version: 2.4
+Name: ampliconflow
+Version: 2.0.0.dev0
+Summary: Notebook-centered, reproducible ampliconflowe analysis pipeline using QIIME 2 and Papermill.
+Requires-Python: >=3.11
+License-File: LICENSE
+Requires-Dist: PyYAML>=6.0
+Requires-Dist: jsonschema>=4.0
+Requires-Dist: nbformat>=5.9
+Provides-Extra: dev
+Requires-Dist: pytest>=8; extra == "dev"
+Requires-Dist: ruff>=0.6; extra == "dev"
+Dynamic: license-file

@@ -1,0 +1,51 @@
+#!/usr/bin/env bash
+set -Eeuo pipefail
+
+if [[ $# -lt 2 ]]; then
+    echo "Usage: ampliconflow <parameters.yaml> <conda-environment>" >&2
+    exit 1
+fi
+PARAMETERS_FILE="$1"
+CONDA_ENV="$2"
+PROJECT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+SCHEMA="${PROJECT_DIR}/schemas/parameters.schema.json"
+NOTEBOOK_DIR="${PROJECT_DIR}/notebooks/templates"
+CONDA_BASE="${CONDA_BASE:-/opt/miniconda}"
+CONDA_SH="${CONDA_BASE}/etc/profile.d/conda.sh"
+[[ -f "$PARAMETERS_FILE" ]] || { echo "Error: parameter file not found: $PARAMETERS_FILE" >&2; exit 1; }
+[[ -f "$CONDA_SH" ]] || { echo "Error: Conda initialization file not found: $CONDA_SH" >&2; exit 1; }
+source "$CONDA_SH"
+conda activate "$CONDA_ENV"
+export PYTHONPATH="${PROJECT_DIR}/src${PYTHONPATH:+:${PYTHONPATH}}"
+python -c 'import yaml, jsonschema, nbformat, papermill' >/dev/null
+EXPERIMENT="$(python -m ampliconflow.config "$PARAMETERS_FILE" --schema "$SCHEMA" --field experiment)"
+mapfile -t STEPS < <(python -m ampliconflow.config "$PARAMETERS_FILE" --schema "$SCHEMA" --field steps)
+EXPERIMENT_DIR="${PROJECT_DIR}/experiments/${EXPERIMENT}"
+PARAMETERS_DIR="${EXPERIMENT_DIR}/parameters"; PROVENANCE_DIR="${EXPERIMENT_DIR}/provenance"; EXECUTED_DIR="${EXPERIMENT_DIR}/notebooks"
+mkdir -p "$PARAMETERS_DIR" "$PROVENANCE_DIR" "$EXECUTED_DIR" "${EXPERIMENT_DIR}/artifacts" "${EXPERIMENT_DIR}/figures" "${EXPERIMENT_DIR}/reports"
+cp -f "$PARAMETERS_FILE" "${PARAMETERS_DIR}/parameters.yaml"
+TEMP_BASE="${AMPLICONFLOW_TEMP_DIR:-${PROJECT_DIR}/.tmp}"; AMPLICONFLOW_TMP="${TEMP_BASE}/${EXPERIMENT}"
+export TMPDIR="${AMPLICONFLOW_TMP}/qiime2"; export TMP="$TMPDIR"; export TEMP="$TMPDIR"; export JOBLIB_TEMP_FOLDER="${AMPLICONFLOW_TMP}/joblib"; export QIIME_CACHE="${AMPLICONFLOW_TMP}/qiime2-cache"
+mkdir -p "$TMPDIR" "$JOBLIB_TEMP_FOLDER" "$QIIME_CACHE"
+cleanup(){ local code=$?; if [[ $code -eq 0 ]]; then rm -rf -- "$AMPLICONFLOW_TMP"; else echo "Pipeline failed ($code); temporary data preserved at $AMPLICONFLOW_TMP" >&2; fi; return "$code"; }
+trap cleanup EXIT
+python - "$EXPERIMENT" "$PARAMETERS_FILE" "${PROVENANCE_DIR}/run-start.json" <<'PY2'
+import sys
+from ampliconflow.provenance import collect_run_info, write_run_info
+experiment,params,output=sys.argv[1:4]
+write_run_info(output,collect_run_info(experiment=experiment,parameters_file=params,status="running"))
+PY2
+echo "AmpliconFlow | Experiment: $EXPERIMENT | Steps: ${STEPS[*]}"
+for index in "${!STEPS[@]}"; do
+    step="${STEPS[$index]}"; number="$(printf '%02d' $((index+1)))"
+    template="${NOTEBOOK_DIR}/${number}-${step}.ipynb"; output="${EXECUTED_DIR}/${number}-${step}.ipynb"
+    [[ -f "$template" ]] || { echo "Error: notebook template not found: $template" >&2; echo "This step has not yet been migrated to 2.0." >&2; exit 1; }
+    python -m papermill "$template" "$output" --parameters_file "$PARAMETERS_FILE"
+done
+python - "$EXPERIMENT" "$PARAMETERS_FILE" "${PROVENANCE_DIR}/run-end.json" <<'PY2'
+import sys
+from ampliconflow.provenance import collect_run_info, write_run_info
+experiment,params,output=sys.argv[1:4]
+write_run_info(output,collect_run_info(experiment=experiment,parameters_file=params,status="completed"))
+PY2
+echo "Pipeline completed successfully: $EXPERIMENT_DIR"
