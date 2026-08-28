@@ -1,4 +1,27 @@
-# Migration plan from AmpliconFlow 1.x
+# Migration plan from microbiom to AmpliconFlow 2.0
+
+The legacy `lauromoraes/microbiom` project remains the comparison baseline. No analytical step has yet been accepted as migrated.
+
+## Milestone 0 — Consolidate contracts
+
+- [x] Create the scaffold, initial YAML/schema, notebook guide, and structural CI workflow.
+- [x] Document the academic PDF requirement and semantic [reporting contract](REPORTING.md).
+- [ ] Validate these documented contracts with the project owner.
+- [ ] Finalize YAML/path rules, stable step selection, prerequisites, and rerun behavior.
+- [ ] Consolidate the public CLI and validate environment/temporary handling.
+- [ ] Define the concrete report contribution schema and validation.
+- [ ] Confirm a representative dataset, legacy revision/outputs, environments, and comparison criteria.
+- [ ] Re-run structural tests, lint, shell checks, and CLI validation after infrastructure changes.
+
+Documentation checkmarks do not imply executable reporting support or scientific validation. The PDF renderer remains open.
+
+## Milestone 1 — Prepare Data + QC/DADA2
+
+Migrate `01-prepare-data.ipynb`, followed by `02-quality-control.ipynb`, with reporting contributions from the outset. Validate manifest/metadata, imported artifacts, denoising outputs, read retention, ASV counts, and QC diagnostics against the representative legacy experiment. Record expected differences caused by version changes instead of requiring unexplained byte-for-byte identity.
+
+Keep the legacy operational. Advance to subsequent analyses after this pair passes infrastructure and scientific acceptance.
+
+## Acceptance for each notebook
 
 A migrated notebook is accepted only when it:
 
@@ -11,9 +34,12 @@ A migrated notebook is accepted only when it:
 7. includes primary references;
 8. documents acceptance criteria;
 9. executes on a representative experiment;
-10. is compared with the corresponding 1.x output.
+10. is compared with the corresponding legacy output using recorded criteria;
+11. emits a validated report contribution with traceable results, references, and exported figures/tables where applicable;
+12. records relevant input/environment provenance and explicit warnings/limitations.
 
-Suggested order:
+## Migration order
+
 - [ ] 01 Prepare data
 - [ ] 02 Quality control / DADA2
 - [ ] 03 Rarefaction analysis
@@ -23,4 +49,6 @@ Suggested order:
 - [ ] 07 LEfSe
 - [ ] 08 PICRUSt2
 - [ ] 09 ANCOM-BC2
-- [ ] 10 Report
+- [ ] 10 Academic report aggregation, source/manifest preservation, and PDF rendering
+
+Migrate external components alongside their analytical step, with versioned environments and separate preparation instructions. Use focused changes and review before merging; structural CI does not replace representative scientific execution.

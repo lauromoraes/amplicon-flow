@@ -21,3 +21,15 @@ Each pipeline notebook should follow:
 Each template must contain exactly one code cell tagged `parameters`. Templates committed to Git must have null execution counts, empty outputs, no machine-specific absolute paths, and no `injected-parameters` cells.
 
 Keep method-defining calls visible. Prefer primary scientific publications for methods and databases. State acceptance criteria before presenting diagnostic results whenever practical.
+
+## Reporting contributions
+
+Every migrated pipeline notebook must follow the [academic reporting contract](REPORTING.md). Describe its contribution under Outputs and produce structured methods, effective parameters, observed results, QC assessment, interpretation/limitations, references, and artifact links. This supplements the notebook's scientific narrative rather than replacing it.
+
+Keep methods, measured results, and interpretation distinguishable. Export report figures/tables with captions instead of relying only on inline displays. Record warnings and unmet criteria explicitly; never invent missing results or silently reuse contributions from earlier runs.
+
+## Execution prerequisites
+
+Pipeline templates consume the temporary environment prepared before kernel startup. Standalone notebooks configure their own local environment without requiring the runner. Connect the configured cache path explicitly to relevant scientific calls.
+
+Validate inputs, software, and versioned container images before analysis. Installation and Docker builds belong to a separate preparation workflow. Record relevant tool, classifier, and reference-database identities for notebook provenance and reporting.

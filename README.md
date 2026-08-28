@@ -6,6 +6,14 @@ The project is designed around a simple principle: analytical notebooks are not 
 
 > **Status:** early 2.0 architecture. Analytical steps from the previous project are being migrated progressively and validated one at a time.
 
+The scaffold is in place; analytical notebooks and PDF reporting are not yet implemented. The legacy [microbiom project](https://github.com/lauromoraes/microbiom) remains the functional reference.
+
+## Next milestone and requirements
+
+The next milestone is **contract consolidation, then Prepare Data + QC/DADA2**, validated against a representative legacy experiment. An accepted requirement is an **academic PDF report** covering objectives, methods, rationale, results, interpretation, limitations, references, and provenance for the steps actually executed. Each migrated notebook must contribute structured content; retain the report source and manifest alongside the PDF.
+
+See [architecture and open decisions](docs/ARCHITECTURE.md), the [reporting contract](docs/REPORTING.md), and [migration milestones](docs/MIGRATION_PLAN.md). CLI consolidation, final YAML, supported environments, and the PDF renderer are not yet finalized. The command examples below describe the current scaffold.
+
 ## Core design
 
 - Jupyter notebooks remain the primary analytical units.
@@ -42,6 +50,7 @@ ampliconflow/
 ├── docs/
 │   ├── ARCHITECTURE.md
 │   ├── MIGRATION_PLAN.md
+│   ├── REPORTING.md
 │   └── NOTEBOOK_STYLE_GUIDE.md
 │
 └── tests/
