@@ -6,7 +6,17 @@ The project is designed around a simple principle: analytical notebooks are not 
 
 > **Status:** early 2.0 architecture. Analytical steps from the previous project are being migrated progressively and validated one at a time.
 
+The scaffold is in place; analytical notebooks and PDF reporting are not yet implemented. The legacy [microbiom project](https://github.com/lauromoraes/microbiom) remains the functional reference.
+
+## Next milestone and requirements
+
+The next milestone is **contract consolidation, then Prepare Data + QC/DADA2**, validated against a representative legacy experiment. An accepted requirement is an **academic PDF report** covering objectives, methods, rationale, results, interpretation, limitations, references, and provenance for the steps actually executed. Each migrated notebook must contribute structured content; retain the report source and manifest alongside the PDF.
+
+See [architecture and open decisions](docs/ARCHITECTURE.md), the [reporting contract](docs/REPORTING.md), and [migration milestones](docs/MIGRATION_PLAN.md). CLI consolidation, final YAML, supported environments, and the PDF renderer are not yet finalized. The command examples below describe the current scaffold.
+
 ## Core design
+
+Unique runs, parameter snapshots, lifecycle status, and run-scoped temporaries are implemented. Dependency checks, full preflight, and recorded scientific decisions remain pending in the [execution contract](docs/EXECUTION_CONTRACT.md). Structural CI rejects tracked `.qza` files **only in this application's development repository**, including files added with `git add -f`. Users may freely generate/store `.qza` artifacts and choose to version them in their own repositories; the runtime never invokes that development check.
 
 - Jupyter notebooks remain the primary analytical units.
 - Papermill executes parameterized notebook templates.
@@ -14,6 +24,7 @@ The project is designed around a simple principle: analytical notebooks are not 
 - Reusable infrastructure lives in `src/ampliconflow`.
 - Experiment configuration is defined in YAML and validated before execution.
 - Each run preserves executed notebooks and computational provenance.
+- Planned cross-experiment artifact reuse uses a validated shared store, separate from temporaries; see the [reuse strategy](docs/ARTIFACT_REUSE.md). The store is not yet implemented.
 - Standalone notebooks, such as classifier-building workflows, are kept separate from pipeline steps.
 
 ## Repository structure
@@ -41,7 +52,10 @@ ampliconflow/
 │
 ├── docs/
 │   ├── ARCHITECTURE.md
+│   ├── ARTIFACT_REUSE.md
+│   ├── EXECUTION_CONTRACT.md
 │   ├── MIGRATION_PLAN.md
+│   ├── REPORTING.md
 │   └── NOTEBOOK_STYLE_GUIDE.md
 │
 └── tests/
@@ -76,6 +90,18 @@ ampliconflow validate examples/params-example.yaml
 ampliconflow run params-my-study.yaml rachis-qiime2-2026.7
 ```
 
+## Isolated executions
+
+Each invocation creates `experiments/<experiment>/runs/<run_id>/` under the application checkout. The ID combines a UTC timestamp and UUID; an optional `--run-id ID` can be passed to either run command. An existing ID is refused, never overwritten. Existing legacy experiment directories are left untouched.
+
+Each run contains `parameters/original.yaml`, path-normalized `parameters/effective.yaml`, SHA-256 hashes and source fingerprints in `provenance/`, executed `notebooks/`, `artifacts/`, `figures/`, and `reports/`. `run.json` records current/final status; `run-start.json` and `run-end.json` retain lifecycle snapshots. Failed or cancelled attempts preserve their outputs and diagnostics.
+
+Known input paths (`inputs.metadata_file`, `inputs.manifest_file`, `taxonomy.classifier_file`) and `base_dir` resolve relative to the original YAML, not to the new notebook working directory. This does not relocate the output root: it remains the application checkout for now. Unknown future path fields and scientific defaults require the pending full parameter contract.
+
+Notebook processes start in the run directory and receive `AMPLICONFLOW_RUN_ID`, `AMPLICONFLOW_RUN_DIR`, and `AMPLICONFLOW_PROJECT_DIR`. Templates must save results under the run directory, never reconstruct a shared experiment output path. This is orchestration isolation, not an OS sandbox against notebook code deliberately writing elsewhere.
+
+The initial implementation is tested on Linux/WSL with synthetic notebook executors. Real QIIME 2/Papermill scientific acceptance remains pending; the analytical templates do not exist yet, so running the example currently records a failed attempt for an unmigrated step. Automatic resume/retry linking, dependency validation, and artifact reuse are not implemented.
+
 ## Temporary storage
 
 A large temporary filesystem can be configured outside the repository:
@@ -86,7 +112,7 @@ export AMPLICONFLOW_TEMP_DIR=/path/to/large/tmp/ampliconflow
 
 If it is not defined, the project-local `.tmp/` directory is used.
 
-Temporary files are isolated by experiment. Successful runs clean their temporary directory automatically; failed runs preserve it for debugging.
+Temporary files use `<temp-base>/<experiment>/<run_id>/`. Successful runs remove only their owned directory after checking its ownership marker; failed/cancelled runs preserve it. Other runs, experiment outputs, and shared artifacts are not cleaned. SIGINT/SIGTERM are recorded as cancellation; an uncatchable kill or power loss can leave the last `running` status for manual investigation.
 
 ## Notebook philosophy
 

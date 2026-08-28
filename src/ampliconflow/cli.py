@@ -2,8 +2,8 @@ from __future__ import annotations
 
 import argparse
 import os
-import subprocess
 from pathlib import Path
+from typing import NoReturn
 
 from .config import (
     get_experiment_name,
@@ -33,16 +33,21 @@ def cmd_validate(args: argparse.Namespace) -> int:
     return 0
 
 
-def cmd_run(args: argparse.Namespace) -> int:
+def cmd_run(args: argparse.Namespace) -> NoReturn:
     root = _repo_root()
     runner = root / "ampliconflow"
 
     env = os.environ.copy()
-    return subprocess.call(
-        [str(runner), args.parameters, args.conda_environment],
-        cwd=root,
-        env=env,
-    )
+    command = [
+        "bash",
+        str(runner),
+        str(Path(args.parameters).expanduser().resolve()),
+        args.conda_environment,
+    ]
+    if args.run_id is not None:
+        command.extend(["--run-id", args.run_id])
+    # Replace the CLI process so signals reach the runner, not a waiting parent.
+    os.execvpe("bash", command, env)
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -66,6 +71,9 @@ def build_parser() -> argparse.ArgumentParser:
     )
     run_parser.add_argument("parameters")
     run_parser.add_argument("conda_environment")
+    run_parser.add_argument(
+        "--run-id", help="Optional unique ID; existing run directories are refused."
+    )
     run_parser.set_defaults(func=cmd_run)
 
     return parser

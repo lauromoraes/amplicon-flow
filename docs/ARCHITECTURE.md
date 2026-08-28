@@ -13,12 +13,14 @@ Contain objective, scientific background, methodological rationale, Papermill pa
 Contains infrastructure only: YAML/schema validation, path construction, temporary-environment helpers, provenance collection, and notebook validation utilities.
 
 ### `ampliconflow`
-Activates Conda, validates configuration, configures temporary storage, selects steps from YAML, runs Papermill, records provenance, and cleans successful-run temporaries.
+Activates Conda and hands off to `src/ampliconflow/runner.py`. The Python runner validates configuration, creates an isolated run, freezes parameters, configures child-process temporaries, runs Papermill, records status/provenance, and cleans only successful-run temporaries.
 
 ## Experiment layout
 
+Implemented run layout; see [Execution contract](EXECUTION_CONTRACT.md):
+
 ```text
-experiments/<experiment>/
+experiments/<experiment>/runs/<run_id>/
 ├── parameters/
 ├── provenance/
 ├── notebooks/
@@ -30,3 +32,47 @@ experiments/<experiment>/
 ## Migration rule
 
 A scientific method should remain visible in the notebook. Do not move DADA2/QIIME/statistical logic into infrastructure helpers merely to shorten notebooks.
+
+## Baseline and current status
+
+The legacy [microbiom project](https://github.com/lauromoraes/microbiom) remains the functional reference during incremental migration. AmpliconFlow focuses on amplicon sequencing, not shotgun metagenomics.
+
+The scaffold provides a Conda bootstrap, Python CLI/orchestrator, isolated run directories, parameter snapshots, lifecycle provenance, run-owned temporaries, a notebook template, and structural CI. Analytical steps and academic reporting are not yet implemented. Further requirements below remain targets where explicitly indicated.
+
+## Accepted requirements
+
+- Preserve notebooks and Papermill as the scientific execution model.
+- Generate an academic PDF with objectives, methodology, rationale, results, interpretation, limitations, references, and provenance. Each migrated step contributes explicitly; see [Academic reporting](REPORTING.md).
+- Select steps through validated YAML without editing the runner.
+- Reuse eligible expensive artifacts across experiments through a validated, immutable shared store; see [Artifact reuse](ARTIFACT_REUSE.md). This is separate from temporary/cache cleanup and not yet implemented.
+- Keep machine-specific paths outside scientific templates and prepare pipeline temporaries before kernel startup. Standalone resource-building notebooks manage their own local temporary space.
+- Preserve executed notebooks and execution parameters/provenance. Clean owned temporary data only after success and retain it on failure.
+- Keep the legacy workflow operational while validating migrated steps against representative legacy outputs.
+
+## CLI and YAML consolidation
+
+The preferred public interface is `ampliconflow validate ...` and `ampliconflow run ...`. The same-named shell script remains a compatibility entry point and Conda bootstrap, while execution lifecycle is now coordinated in Python. Final packaging and retirement/renaming of the shell entry point remain open.
+
+The current YAML/schema is a bootstrap. Before migrating the first notebook, define path-resolution rules, manifest/metadata validation, sequencing layout, per-step parameters, and required fields for selected steps. Also define prerequisite artifacts, rerun/overwrite behavior, preservation of earlier execution records, and reporting metadata.
+
+Notebook names now use stable step numbering even when selecting subsets. Prerequisite validation is not implemented yet. Resume/start/stop controls remain possible extensions, not implemented requirements.
+
+## Environment policy
+
+Prepare dependencies separately from analysis. Use versioned Docker images rather than `latest`, and record resolved image digests when available. Notebooks check prerequisites and explain how to prepare missing tools; they should not download/build tools during analysis. Migrate external R scripts, Dockerfiles, and wrappers alongside their analytical step in `src/external`.
+
+Extend basic provenance with relevant plugin/tool versions, container identity, classifier/reference database identity, effective parameters, executed steps, and timestamps. The previously discussed QIIME 2/Rachis 2026.7 and Python 3.12 environment is a candidate validation baseline, not a newly imposed version pin.
+
+Pipeline notebooks inherit temporary settings; standalone classifier-building notebooks must work without the runner. `QIIME_CACHE` is a project convention for passing a path, not an automatic QIIME 2 configuration: scientific calls must explicitly consume it through the appropriate option/API. Validate cleanup targets and ownership before deletion.
+
+## Open decisions
+
+The [execution contract](EXECUTION_CONTRACT.md) documents implemented run isolation and the remaining dependency planning, preflight, scientific decision records, validation dataset, and data-publication safeguards.
+
+- Concrete YAML/schema implementing the documented path, prerequisite, and new-run semantics.
+- Final packaging of the public CLI and Conda bootstrap.
+- Concrete report contribution schema/serialization and PDF renderer.
+- Artifact recipe/manifest schemas, reuse policy precedence, retention, and export semantics.
+- Representative dataset, legacy baseline, comparison tolerances, and supported environments.
+
+Keep CI lightweight and structural. Scientific acceptance requires a separate representative execution; see [Migration milestones](MIGRATION_PLAN.md).
