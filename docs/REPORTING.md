@@ -47,7 +47,7 @@ An analysis whose validated outputs were explicitly reused is not an omitted ana
 
 Separate Methods, Results, and Interpretation. Include study/input context, computational provenance, limitations, references, and useful appendices. Preserve commit identity, parameter-file hash, relevant software/plugin versions, database/classifier identity, parameters, executed steps, and timestamps.
 
-The scaffold currently reserves `experiments/<experiment>/reports/`. Under the target [execution contract](EXECUTION_CONTRACT.md), outputs belong in `experiments/<experiment>/runs/<run_id>/reports/`, so reports from repeated attempts cannot overwrite each other. Report metadata must follow an explicit publication allowlist, and scientific decisions must link to their supporting diagnostics.
+The runner now reserves `experiments/<experiment>/runs/<run_id>/reports/` under the [execution contract](EXECUTION_CONTRACT.md), so future reports from repeated attempts cannot overwrite each other. Report rendering, metadata allowlists, and links to scientific decision diagnostics remain to be implemented.
 
 Planned outputs in the run's report directory:
 

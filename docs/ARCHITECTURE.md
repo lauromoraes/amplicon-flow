@@ -13,14 +13,14 @@ Contain objective, scientific background, methodological rationale, Papermill pa
 Contains infrastructure only: YAML/schema validation, path construction, temporary-environment helpers, provenance collection, and notebook validation utilities.
 
 ### `ampliconflow`
-Activates Conda, validates configuration, configures temporary storage, selects steps from YAML, runs Papermill, records provenance, and cleans successful-run temporaries.
+Activates Conda and hands off to `src/ampliconflow/runner.py`. The Python runner validates configuration, creates an isolated run, freezes parameters, configures child-process temporaries, runs Papermill, records status/provenance, and cleans only successful-run temporaries.
 
 ## Experiment layout
 
-Current scaffold layout (the target adds `runs/<run_id>/` under each experiment; see [Execution contract](EXECUTION_CONTRACT.md)):
+Implemented run layout; see [Execution contract](EXECUTION_CONTRACT.md):
 
 ```text
-experiments/<experiment>/
+experiments/<experiment>/runs/<run_id>/
 ├── parameters/
 ├── provenance/
 ├── notebooks/
@@ -37,7 +37,7 @@ A scientific method should remain visible in the notebook. Do not move DADA2/QII
 
 The legacy [microbiom project](https://github.com/lauromoraes/microbiom) remains the functional reference during incremental migration. AmpliconFlow focuses on amplicon sequencing, not shotgun metagenomics.
 
-The scaffold provides a shell runner, Python CLI, initial YAML/schema, basic provenance, temporary-directory helpers, a notebook template, and structural CI. Analytical steps and academic reporting are not yet implemented. The following sections describe the target, not completed functionality.
+The scaffold provides a Conda bootstrap, Python CLI/orchestrator, isolated run directories, parameter snapshots, lifecycle provenance, run-owned temporaries, a notebook template, and structural CI. Analytical steps and academic reporting are not yet implemented. Further requirements below remain targets where explicitly indicated.
 
 ## Accepted requirements
 
@@ -51,11 +51,11 @@ The scaffold provides a shell runner, Python CLI, initial YAML/schema, basic pro
 
 ## CLI and YAML consolidation
 
-The target public interface is `ampliconflow validate ...` and `ampliconflow run ...`. Currently the shell runner and installed Python command share a name. Choose an internal renamed shell runner or Python orchestration in a separate implementation change; neither option is finalized here.
+The preferred public interface is `ampliconflow validate ...` and `ampliconflow run ...`. The same-named shell script remains a compatibility entry point and Conda bootstrap, while execution lifecycle is now coordinated in Python. Final packaging and retirement/renaming of the shell entry point remain open.
 
 The current YAML/schema is a bootstrap. Before migrating the first notebook, define path-resolution rules, manifest/metadata validation, sequencing layout, per-step parameters, and required fields for selected steps. Also define prerequisite artifacts, rerun/overwrite behavior, preservation of earlier execution records, and reporting metadata.
 
-Step identity must remain stable when selecting subsets. Review the current runner's positional notebook numbering as part of this contract. Resume/start/stop controls remain possible extensions, not implemented requirements.
+Notebook names now use stable step numbering even when selecting subsets. Prerequisite validation is not implemented yet. Resume/start/stop controls remain possible extensions, not implemented requirements.
 
 ## Environment policy
 
@@ -67,10 +67,10 @@ Pipeline notebooks inherit temporary settings; standalone classifier-building no
 
 ## Open decisions
 
-The [execution contract](EXECUTION_CONTRACT.md) defines the target run isolation, dependency planning, preflight, scientific decision records, validation dataset, and data-publication safeguards. These runtime features are pending implementation.
+The [execution contract](EXECUTION_CONTRACT.md) documents implemented run isolation and the remaining dependency planning, preflight, scientific decision records, validation dataset, and data-publication safeguards.
 
 - Concrete YAML/schema implementing the documented path, prerequisite, and new-run semantics.
-- Internal orchestration behind the single public CLI.
+- Final packaging of the public CLI and Conda bootstrap.
 - Concrete report contribution schema/serialization and PDF renderer.
 - Artifact recipe/manifest schemas, reuse policy precedence, retention, and export semantics.
 - Representative dataset, legacy baseline, comparison tolerances, and supported environments.

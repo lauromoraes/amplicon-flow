@@ -32,6 +32,10 @@ Keep methods, measured results, and interpretation distinguishable. Export repor
 
 Pipeline templates consume the temporary environment prepared before kernel startup. Standalone notebooks configure their own local environment without requiring the runner. Connect the configured cache path explicitly to relevant scientific calls.
 
+Pipeline templates receive `AMPLICONFLOW_RUN_ID`, `AMPLICONFLOW_RUN_DIR`, and `AMPLICONFLOW_PROJECT_DIR`. Save artifacts, figures, and reports beneath `AMPLICONFLOW_RUN_DIR`; do not reconstruct experiment-wide output paths. Input paths supplied by the runner are normalized relative to the source YAML. The notebook's working directory is the isolated run directory.
+
+`.qza` files are normal scientific inputs/outputs. The exclusion from Git applies only to development of this application; notebooks must not restrict users from storing or versioning their own artifacts.
+
 Validate inputs, software, and versioned container images before analysis. Installation and Docker builds belong to a separate preparation workflow. Record relevant tool, classifier, and reference-database identities for notebook provenance and reporting.
 
 ## Reusable artifacts

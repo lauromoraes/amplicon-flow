@@ -12,7 +12,7 @@ The legacy `lauromoraes/microbiom` project remains the comparison baseline. No a
 - [ ] Validate these documented contracts with the project owner.
 - [ ] Finalize YAML/path rules, stable step selection, prerequisites, and rerun behavior.
 - [ ] Consolidate the public CLI and validate environment/temporary handling.
-- [ ] Implement unique run directories, immutable snapshots, statuses, and run-scoped cleanup.
+- [x] Implement exclusive run directories, application-level write-once snapshots, statuses, and owned run-scoped cleanup; validate with synthetic executors.
 - [ ] Implement dependency planning and structured preflight/execution-time validation.
 - [ ] Implement scientific decision records and explicit metadata-publication controls.
 - [ ] Define the concrete report contribution schema and validation.
@@ -22,6 +22,8 @@ The legacy `lauromoraes/microbiom` project remains the comparison baseline. No a
 - [ ] Re-run structural tests, lint, shell checks, and CLI validation after infrastructure changes.
 
 Documentation checkmarks do not imply executable reporting support or scientific validation. The PDF renderer remains open.
+
+Run isolation now has automated tests for repeated/concurrent attempts, collisions, unsafe paths, snapshot consistency, failure/cancellation, and user `.qza` outputs. Scientific validation with real migrated QIIME 2 notebooks is still pending. The `.qza` CI rule applies only to this application's development repository, not user analysis repositories.
 
 ## Milestone 1 — Prepare Data + QC/DADA2
 

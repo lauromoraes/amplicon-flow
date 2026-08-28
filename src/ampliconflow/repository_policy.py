@@ -1,4 +1,4 @@
-"""Repository hygiene checks; no scientific artifacts should be tracked by Git."""
+"""Development-repository hygiene only; never called by the user-facing pipeline."""
 
 from __future__ import annotations
 
@@ -22,7 +22,7 @@ def tracked_qza_files(repository: str | Path) -> list[str]:
 
 
 def main() -> int:
-    parser = argparse.ArgumentParser(description="Reject tracked .qza artifacts.")
+    parser = argparse.ArgumentParser(description="Check this application's development repository.")
     parser.add_argument("repository", nargs="?", default=".", type=Path)
     args = parser.parse_args()
     try:
@@ -30,7 +30,7 @@ def main() -> int:
     except (OSError, subprocess.CalledProcessError) as error:
         parser.exit(2, f"Could not inspect the Git index: {error}\n")
     if paths:
-        print("Tracked .qza files are not allowed; store artifacts outside Git:")
+        print("Tracked .qza files are not allowed in this application's development repository:")
         for path in paths:
             print(f"  {path!r}")
         return 1

@@ -10,7 +10,8 @@ tmp/
 experiments/
 data/
 classifiers/
-# Generated QIIME 2 artifacts belong in experiment storage or the shared store.
+# Development repository only: keep large QIIME 2 binaries out of this app's Git history.
+# This is not a runtime restriction or a policy for users' own repositories.
 *.qza
 .vscode/
 .idea/

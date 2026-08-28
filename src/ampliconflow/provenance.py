@@ -6,6 +6,7 @@ import os
 import platform
 import subprocess
 import sys
+import tempfile
 from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
@@ -48,7 +49,9 @@ def collect_run_info(
     experiment: str,
     parameters_file: str | Path,
     status: str,
+    project_dir: str | Path | None = None,
 ) -> dict[str, Any]:
+    git = ["git", "-C", str(Path(project_dir or ".").resolve())]
     return {
         "experiment": experiment,
         "status": status,
@@ -63,7 +66,8 @@ def collect_run_info(
                 ("import papermill; print(papermill.__version__)"),
             ]
         ),
-        "git_commit": _command_output(["git", "rev-parse", "HEAD"]),
+        "git_commit": _command_output([*git, "rev-parse", "HEAD"]),
+        "git_status": _command_output([*git, "status", "--short"]),
         "parameters_file": str(Path(parameters_file).resolve()),
         "parameters_sha256": sha256_file(parameters_file),
         "environment": {
@@ -86,7 +90,19 @@ def write_run_info(
         exist_ok=True,
     )
 
-    path.write_text(
-        json.dumps(info, indent=2) + "\n",
-        encoding="utf-8",
-    )
+    # Atomic replacement keeps readers from observing a partially written status.
+    with tempfile.NamedTemporaryFile(
+        mode="w", encoding="utf-8", dir=path.parent, delete=False
+    ) as fh:
+        temporary = Path(fh.name)
+        try:
+            fh.write(json.dumps(info, indent=2) + "\n")
+            fh.flush()
+            os.fsync(fh.fileno())
+        except BaseException:
+            temporary.unlink(missing_ok=True)
+            raise
+    try:
+        temporary.replace(path)
+    finally:
+        temporary.unlink(missing_ok=True)
