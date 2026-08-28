@@ -22,6 +22,7 @@ See [architecture and open decisions](docs/ARCHITECTURE.md), the [reporting cont
 - Reusable infrastructure lives in `src/ampliconflow`.
 - Experiment configuration is defined in YAML and validated before execution.
 - Each run preserves executed notebooks and computational provenance.
+- Planned cross-experiment artifact reuse uses a validated shared store, separate from temporaries; see the [reuse strategy](docs/ARTIFACT_REUSE.md). The store is not yet implemented.
 - Standalone notebooks, such as classifier-building workflows, are kept separate from pipeline steps.
 
 ## Repository structure
@@ -49,6 +50,7 @@ ampliconflow/
 │
 ├── docs/
 │   ├── ARCHITECTURE.md
+│   ├── ARTIFACT_REUSE.md
 │   ├── MIGRATION_PLAN.md
 │   ├── REPORTING.md
 │   └── NOTEBOOK_STYLE_GUIDE.md

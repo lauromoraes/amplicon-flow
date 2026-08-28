@@ -6,10 +6,13 @@ The legacy `lauromoraes/microbiom` project remains the comparison baseline. No a
 
 - [x] Create the scaffold, initial YAML/schema, notebook guide, and structural CI workflow.
 - [x] Document the academic PDF requirement and semantic [reporting contract](REPORTING.md).
+- [x] Document the cross-experiment [artifact reuse strategy](ARTIFACT_REUSE.md).
 - [ ] Validate these documented contracts with the project owner.
 - [ ] Finalize YAML/path rules, stable step selection, prerequisites, and rerun behavior.
 - [ ] Consolidate the public CLI and validate environment/temporary handling.
 - [ ] Define the concrete report contribution schema and validation.
+- [ ] Define reusable-step recipes/manifests, eligibility, policy precedence, and retention/export rules.
+- [ ] Implement and test a shared-filesystem store for classifiers and one eligible pipeline step, including invalidation, integrity, concurrent publication, and provenance.
 - [ ] Confirm a representative dataset, legacy revision/outputs, environments, and comparison criteria.
 - [ ] Re-run structural tests, lint, shell checks, and CLI validation after infrastructure changes.
 
@@ -36,7 +39,8 @@ A migrated notebook is accepted only when it:
 9. executes on a representative experiment;
 10. is compared with the corresponding legacy output using recorded criteria;
 11. emits a validated report contribution with traceable results, references, and exported figures/tables where applicable;
-12. records relevant input/environment provenance and explicit warnings/limitations.
+12. records relevant input/environment provenance and explicit warnings/limitations;
+13. declares reuse eligibility and dependencies, and, if eligible, validates both reuse hits and invalidation while identifying reused results in provenance and reports.
 
 ## Migration order
 

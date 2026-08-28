@@ -33,3 +33,7 @@ Keep methods, measured results, and interpretation distinguishable. Export repor
 Pipeline templates consume the temporary environment prepared before kernel startup. Standalone notebooks configure their own local environment without requiring the runner. Connect the configured cache path explicitly to relevant scientific calls.
 
 Validate inputs, software, and versioned container images before analysis. Installation and Docker builds belong to a separate preparation workflow. Record relevant tool, classifier, and reference-database identities for notebook provenance and reporting.
+
+## Reusable artifacts
+
+Declare whether the step supports [artifact reuse](ARTIFACT_REUSE.md), its scientific input dependencies, result-affecting parameters, implementation identity, and reusable outputs. On a reuse hit, preserve source provenance and produce an explicit current-experiment reuse record/report contribution; never imply that scientific computation ran again. Shared outputs are immutable and must not be removed by notebook cleanup.

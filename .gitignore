@@ -10,6 +10,8 @@ tmp/
 experiments/
 data/
 classifiers/
+# Generated QIIME 2 artifacts belong in experiment storage or the shared store.
+*.qza
 .vscode/
 .idea/
 .DS_Store

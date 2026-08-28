@@ -42,6 +42,7 @@ The scaffold provides a shell runner, Python CLI, initial YAML/schema, basic pro
 - Preserve notebooks and Papermill as the scientific execution model.
 - Generate an academic PDF with objectives, methodology, rationale, results, interpretation, limitations, references, and provenance. Each migrated step contributes explicitly; see [Academic reporting](REPORTING.md).
 - Select steps through validated YAML without editing the runner.
+- Reuse eligible expensive artifacts across experiments through a validated, immutable shared store; see [Artifact reuse](ARTIFACT_REUSE.md). This is separate from temporary/cache cleanup and not yet implemented.
 - Keep machine-specific paths outside scientific templates and prepare pipeline temporaries before kernel startup. Standalone resource-building notebooks manage their own local temporary space.
 - Preserve executed notebooks and execution parameters/provenance. Clean owned temporary data only after success and retain it on failure.
 - Keep the legacy workflow operational while validating migrated steps against representative legacy outputs.
@@ -67,6 +68,7 @@ Pipeline notebooks inherit temporary settings; standalone classifier-building no
 - Final YAML/schema, path rules, prerequisites, and rerun semantics.
 - Internal orchestration behind the single public CLI.
 - Concrete report contribution schema/serialization and PDF renderer.
+- Artifact recipe/manifest schemas, reuse policy precedence, retention, and export semantics.
 - Representative dataset, legacy baseline, comparison tolerances, and supported environments.
 
 Keep CI lightweight and structural. Scientific acceptance requires a separate representative execution; see [Migration milestones](MIGRATION_PLAN.md).

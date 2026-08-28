@@ -43,6 +43,8 @@ These are content expectations, not fixed field names or universal thresholds. E
 
 Include only analyses actually executed. Do not create empty LEfSe/PICRUSt2 sections when those steps were omitted. Failed or incomplete runs must never be represented as complete successful analyses; support for partial PDFs remains open.
 
+An analysis whose validated outputs were explicitly reused is not an omitted analysis. Include it with a clear reused designation, recipe/result identity, original producer execution, and current consumer provenance. Generate a current-experiment contribution without presenting a source notebook as newly executed or blindly copying experiment-specific interpretation. See [Artifact reuse](ARTIFACT_REUSE.md).
+
 Separate Methods, Results, and Interpretation. Include study/input context, computational provenance, limitations, references, and useful appendices. Preserve commit identity, parameter-file hash, relevant software/plugin versions, database/classifier identity, parameters, executed steps, and timestamps.
 
 Planned outputs under `experiments/<experiment>/reports/`:
