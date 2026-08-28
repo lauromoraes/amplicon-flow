@@ -16,6 +16,8 @@ See [architecture and open decisions](docs/ARCHITECTURE.md), the [reporting cont
 
 ## Core design
 
+The target [execution contract](docs/EXECUTION_CONTRACT.md) also specifies unique runs, dependency checks, preflight, and recorded scientific decisions. These runtime changes are not yet implemented. Structural CI already rejects tracked `.qza` files, including files added with `git add -f`.
+
 - Jupyter notebooks remain the primary analytical units.
 - Papermill executes parameterized notebook templates.
 - Scientific decisions remain visible in the notebooks.
@@ -51,6 +53,7 @@ ampliconflow/
 ├── docs/
 │   ├── ARCHITECTURE.md
 │   ├── ARTIFACT_REUSE.md
+│   ├── EXECUTION_CONTRACT.md
 │   ├── MIGRATION_PLAN.md
 │   ├── REPORTING.md
 │   └── NOTEBOOK_STYLE_GUIDE.md

@@ -17,6 +17,8 @@ Activates Conda, validates configuration, configures temporary storage, selects 
 
 ## Experiment layout
 
+Current scaffold layout (the target adds `runs/<run_id>/` under each experiment; see [Execution contract](EXECUTION_CONTRACT.md)):
+
 ```text
 experiments/<experiment>/
 ├── parameters/
@@ -65,7 +67,9 @@ Pipeline notebooks inherit temporary settings; standalone classifier-building no
 
 ## Open decisions
 
-- Final YAML/schema, path rules, prerequisites, and rerun semantics.
+The [execution contract](EXECUTION_CONTRACT.md) defines the target run isolation, dependency planning, preflight, scientific decision records, validation dataset, and data-publication safeguards. These runtime features are pending implementation.
+
+- Concrete YAML/schema implementing the documented path, prerequisite, and new-run semantics.
 - Internal orchestration behind the single public CLI.
 - Concrete report contribution schema/serialization and PDF renderer.
 - Artifact recipe/manifest schemas, reuse policy precedence, retention, and export semantics.

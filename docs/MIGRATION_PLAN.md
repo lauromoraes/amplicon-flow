@@ -7,9 +7,14 @@ The legacy `lauromoraes/microbiom` project remains the comparison baseline. No a
 - [x] Create the scaffold, initial YAML/schema, notebook guide, and structural CI workflow.
 - [x] Document the academic PDF requirement and semantic [reporting contract](REPORTING.md).
 - [x] Document the cross-experiment [artifact reuse strategy](ARTIFACT_REUSE.md).
+- [x] Define the target [execution contract](EXECUTION_CONTRACT.md), including run isolation, dependencies, preflight, human decisions, and data safeguards.
+- [x] Add a structural CI check rejecting tracked `.qza` files, including force-added artifacts.
 - [ ] Validate these documented contracts with the project owner.
 - [ ] Finalize YAML/path rules, stable step selection, prerequisites, and rerun behavior.
 - [ ] Consolidate the public CLI and validate environment/temporary handling.
+- [ ] Implement unique run directories, immutable snapshots, statuses, and run-scoped cleanup.
+- [ ] Implement dependency planning and structured preflight/execution-time validation.
+- [ ] Implement scientific decision records and explicit metadata-publication controls.
 - [ ] Define the concrete report contribution schema and validation.
 - [ ] Define reusable-step recipes/manifests, eligibility, policy precedence, and retention/export rules.
 - [ ] Implement and test a shared-filesystem store for classifiers and one eligible pipeline step, including invalidation, integrity, concurrent publication, and provenance.

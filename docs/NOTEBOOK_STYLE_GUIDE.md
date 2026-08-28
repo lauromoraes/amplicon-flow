@@ -36,4 +36,6 @@ Validate inputs, software, and versioned container images before analysis. Insta
 
 ## Reusable artifacts
 
+Use the target [execution contract](EXECUTION_CONTRACT.md) for run identity, prerequisite checks, scientific decision records, and report metadata controls. Record the evidence and rationale for human choices rather than inventing them from parameter values.
+
 Declare whether the step supports [artifact reuse](ARTIFACT_REUSE.md), its scientific input dependencies, result-affecting parameters, implementation identity, and reusable outputs. On a reuse hit, preserve source provenance and produce an explicit current-experiment reuse record/report contribution; never imply that scientific computation ran again. Shared outputs are immutable and must not be removed by notebook cleanup.
