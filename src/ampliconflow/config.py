@@ -1,12 +1,31 @@
 from __future__ import annotations
 
 import argparse
+import copy
 import json
 from pathlib import Path
 from typing import Any
 
 import yaml
 from jsonschema import Draft202012Validator
+
+
+def effective_parameters(parameters, source: Path):
+    """Resolve configured input paths relative to the original YAML, not run cwd."""
+    result = copy.deepcopy(parameters)
+
+    def resolve(value):
+        return str((source.parent / Path(value).expanduser()).resolve())
+
+    result["base_dir"] = resolve(result["base_dir"])
+    for name in ("metadata_file", "manifest_file"):
+        if name in result["inputs"]:
+            result["inputs"][name] = resolve(result["inputs"][name])
+    for artifact in result["inputs"].get("artifacts", {}).values():
+        artifact["path"] = resolve(artifact["path"])
+    if result.get("taxonomy", {}).get("classifier_file"):
+        result["taxonomy"]["classifier_file"] = resolve(result["taxonomy"]["classifier_file"])
+    return result
 
 
 def load_parameters(path: str | Path) -> dict[str, Any]:
@@ -37,7 +56,7 @@ def validate_parameters(
 
     errors = sorted(
         validator.iter_errors(parameters),
-        key=lambda error: list(error.path),
+        key=lambda error: tuple(map(str, error.path)),
     )
 
     if errors:

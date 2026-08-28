@@ -4,6 +4,7 @@ import signal
 import subprocess
 import sys
 import time
+import zipfile
 from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 
@@ -13,9 +14,44 @@ import yaml
 from ampliconflow import runner
 from ampliconflow.cli import build_parser, cmd_run, cmd_validate
 from ampliconflow.paths import create_run_paths
+from ampliconflow.planning import build_plan
 from ampliconflow.runs import reserve_temporary
 
 ROOT = Path(__file__).resolve().parents[1]
+
+
+def scientific_stubs(folder):
+    (folder / "ipykernel.py").write_text("__version__ = 'fixture'\n", encoding="utf-8")
+    qiime = folder / "qiime2"
+    qiime.mkdir(exist_ok=True)
+    (qiime / "__init__.py").write_text("__version__ = 'fixture'\n", encoding="utf-8")
+    (qiime / "sdk.py").write_text(
+        "class PluginManager:\n    def __init__(self): self.plugins = {'dada2': object()}\n",
+        encoding="utf-8",
+    )
+    jupyter = folder / "jupyter_client"
+    jupyter.mkdir(exist_ok=True)
+    (jupyter / "__init__.py").write_text("", encoding="utf-8")
+    (jupyter / "kernelspec.py").write_text(
+        "import sys\nclass KernelSpecManager:\n"
+        "    def get_kernel_spec(self, name):\n"
+        "        return type('Spec', (), {'argv': [sys.executable]})()\n",
+        encoding="utf-8",
+    )
+
+
+def qza_bytes(semantic_type):
+    import io
+    from uuid import uuid4
+
+    identifier = str(uuid4())
+    target = io.BytesIO()
+    with zipfile.ZipFile(target, "w") as archive:
+        archive.writestr(
+            f"{identifier}/metadata.yaml",
+            f"uuid: {identifier}\ntype: {semantic_type}\nformat: FixtureFormat\n",
+        )
+    return target.getvalue()
 
 
 @pytest.fixture
@@ -27,17 +63,43 @@ def project(tmp_path, monkeypatch):
     )
     templates = project / "notebooks/templates"
     templates.mkdir(parents=True)
+    notebook = {
+        "nbformat": 4,
+        "nbformat_minor": 5,
+        "metadata": {
+            "kernelspec": {"name": "python3", "display_name": "Python 3", "language": "python"}
+        },
+        "cells": [
+            {
+                "cell_type": "code",
+                "execution_count": None,
+                "outputs": [],
+                "metadata": {"tags": ["parameters"]},
+                "source": "experiment_name = None",
+            }
+        ],
+    }
     for name in ("01-prepare-data.ipynb", "02-quality-control.ipynb"):
-        (templates / name).write_text("{}", encoding="utf-8")
+        (templates / name).write_text(json.dumps(notebook), encoding="utf-8")
     config = tmp_path / "config"
     config.mkdir()
     source = config / "params.yaml"
+    (config / "meta.tsv").write_text("sample-id\tgroup\ns1\ta\n", encoding="utf-8")
+    fastq_f = config / "s1_R1.fastq.gz"
+    fastq_r = config / "s1_R2.fastq.gz"
+    fastq_f.write_bytes(b"fixture")
+    fastq_r.write_bytes(b"fixture")
+    (config / "manifest.csv").write_text(
+        f"sample-id,absolute-filepath,direction\ns1,{fastq_f},forward\ns1,{fastq_r},reverse\n",
+        encoding="utf-8",
+    )
     source.write_text(
         yaml.safe_dump(
             {
                 "experiment_name": "study",
                 "base_dir": ".",
                 "inputs": {"metadata_file": "meta.tsv", "manifest_file": "manifest.csv"},
+                "sequencing": {"read_layout": "paired-end"},
                 "pipeline": {"steps": ["prepare-data", "quality-control"]},
             }
         ),
@@ -45,6 +107,18 @@ def project(tmp_path, monkeypatch):
     )
     monkeypatch.delenv("AMPLICONFLOW_TEMP_DIR", raising=False)
     monkeypatch.setattr(runner, "collect_run_info", lambda **_: {"environment": {}})
+    monkeypatch.setattr(
+        runner,
+        "require_preflight",
+        lambda parameters, *_args, **_kwargs: {
+            "ok": True,
+            "errors": [],
+            "warnings": [],
+            "checks": {},
+            "plan": build_plan(parameters),
+        },
+    )
+    monkeypatch.setattr(runner, "verify_bindings", lambda *_args, **_kwargs: {})
     return project, source
 
 
@@ -184,6 +258,12 @@ def test_single_selected_step_uses_stable_number(project, monkeypatch):
     root, source = project
     parameters = yaml.safe_load(source.read_text())
     parameters["pipeline"]["steps"] = ["quality-control"]
+    artifact = source.parent / "demux.qza"
+    artifact.write_bytes(b"planning fixture")
+    parameters["inputs"].pop("manifest_file")
+    parameters["inputs"]["artifacts"] = {
+        "demultiplexed_sequences": {"path": "demux.qza", "sha256": "0" * 64}
+    }
     source.write_text(yaml.safe_dump(parameters), encoding="utf-8")
     monkeypatch.setattr(runner, "execute_notebook", fake_notebook)
     paths = runner.run_pipeline(source, root)
@@ -247,10 +327,14 @@ def test_validate_does_not_allocate_run(project, monkeypatch):
 
 def test_real_subprocess_receives_run_environment(project, tmp_path, monkeypatch):
     root, source = project
+    parameters = yaml.safe_load(source.read_text())
+    parameters["pipeline"]["steps"] = ["prepare-data"]
+    source.write_text(yaml.safe_dump(parameters), encoding="utf-8")
     stub = tmp_path / "stub"
     stub.mkdir()
     (stub / "papermill.py").write_text(
-        "import os, pathlib, sys\n"
+        "import os, pathlib, sys, uuid, zipfile\n"
+        "__version__ = 'fixture'\n"
         "root = pathlib.Path(os.environ['AMPLICONFLOW_RUN_DIR'])\n"
         "assert pathlib.Path.cwd() == root\n"
         "assert pathlib.Path(os.environ['TMPDIR']).is_dir()\n"
@@ -258,6 +342,14 @@ def test_real_subprocess_receives_run_environment(project, tmp_path, monkeypatch
         "(root / 'artifacts' / 'allowed.qza').write_bytes(b'user output')\n",
         encoding="utf-8",
     )
+    with (stub / "papermill.py").open("a", encoding="utf-8") as handle:
+        handle.write(
+            "identifier = str(uuid.uuid4())\n"
+            "target = root / 'artifacts/prepare-data/demultiplexed_sequences.qza'\n"
+            "with zipfile.ZipFile(target, 'w') as z:\n"
+            " z.writestr(identifier + '/metadata.yaml', f'uuid: {identifier}\\ntype: SampleData[PairedEndSequencesWithQuality]\\nformat: FixtureFormat\\n')\n"
+        )
+    scientific_stubs(stub)
     monkeypatch.setenv("PYTHONPATH", str(stub) + os.pathsep + os.environ.get("PYTHONPATH", ""))
     # User repositories may already track .qza: the runtime never invokes development policy.
     subprocess.run(["git", "init", "--quiet", str(root)], check=True)
@@ -288,6 +380,7 @@ def test_sigterm_cli_cancels_child_and_records_status(project, tmp_path):
         "    time.sleep(30)\n",
         encoding="utf-8",
     )
+    scientific_stubs(stub)
     env = os.environ.copy()
     env["PYTHONPATH"] = str(stub) + os.pathsep + str(ROOT / "src")
     command = [
@@ -327,7 +420,9 @@ def test_mutating_parameter_snapshot_fails_run(project, monkeypatch):
 
     def mutate(command, **kwargs):
         fake_notebook(command, **kwargs)
-        Path(command[-1]).write_text("changed", encoding="utf-8")
+        Path(command[command.index("--parameters_file") + 1]).write_text(
+            "changed", encoding="utf-8"
+        )
 
     monkeypatch.setattr(runner, "execute_notebook", mutate)
     with pytest.raises(RuntimeError, match="snapshot was modified"):
@@ -350,6 +445,9 @@ def test_legacy_outputs_are_untouched(project, monkeypatch):
 
 def test_shell_bootstrap_uses_isolated_runner(project, tmp_path):
     root, source = project
+    parameters = yaml.safe_load(source.read_text())
+    parameters["pipeline"]["steps"] = ["prepare-data"]
+    source.write_text(yaml.safe_dump(parameters), encoding="utf-8")
     (root / "ampliconflow").write_bytes((ROOT / "ampliconflow").read_bytes())
     conda = tmp_path / "conda"
     (conda / "etc/profile.d").mkdir(parents=True)
@@ -359,11 +457,18 @@ def test_shell_bootstrap_uses_isolated_runner(project, tmp_path):
     stub = tmp_path / "shell-stub"
     stub.mkdir()
     (stub / "papermill.py").write_text(
-        "import os, pathlib, sys\n"
-        "assert os.environ['CONDA_DEFAULT_ENV'] == 'test-env'\n"
-        "pathlib.Path(sys.argv[2]).write_text('executed')\n",
+        "import os, pathlib, sys, uuid, zipfile\n"
+        "__version__ = 'fixture'\n"
+        "if __name__ == '__main__':\n"
+        " assert os.environ['CONDA_DEFAULT_ENV'] == 'test-env'\n"
+        " pathlib.Path(sys.argv[2]).write_text('executed')\n"
+        " root = pathlib.Path(os.environ['AMPLICONFLOW_RUN_DIR'])\n"
+        " identifier = str(uuid.uuid4())\n"
+        " with zipfile.ZipFile(root / 'artifacts/prepare-data/demultiplexed_sequences.qza', 'w') as z:\n"
+        "  z.writestr(identifier + '/metadata.yaml', f'uuid: {identifier}\\ntype: SampleData[PairedEndSequencesWithQuality]\\nformat: FixtureFormat\\n')\n",
         encoding="utf-8",
     )
+    scientific_stubs(stub)
     env = os.environ.copy()
     env["CONDA_BASE"] = str(conda)
     env["PATH"] = str(Path(sys.executable).parent) + os.pathsep + env["PATH"]

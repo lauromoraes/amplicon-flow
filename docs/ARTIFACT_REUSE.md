@@ -2,7 +2,7 @@
 
 ## Status and scope
 
-Cross-experiment reuse is an accepted architectural requirement. This document specifies the strategy; the shared store, configuration, and runtime behavior are not yet implemented.
+Cross-experiment reuse is an accepted architectural requirement. The shared store and automatic lookup/publication are not yet implemented. A first controlled bridge is implemented: Quality Control may consume an explicit demultiplexed `.qza` path pinned by SHA-256, and planning/preflight verify its declared semantic type and refuse ambiguous providers. This does not claim automatic reuse or complete QIIME payload validation.
 
 Use a local or shared-filesystem artifact store independent of experiment outputs and temporary storage. Start with expensive classifiers/reference resources and one validated pipeline step; extend to import, DADA2, and downstream analyses only after their dependency contracts are tested. No database or cloud service is required for the first implementation.
 
@@ -42,6 +42,25 @@ reuse:
   store: /path/to/shared/ampliconflow-artifacts
   publish: true
 ```
+
+Implemented explicit binding, useful while the shared store is developed:
+
+```yaml
+inputs:
+  metadata_file: metadata.tsv
+  artifacts:
+    demultiplexed_sequences:
+      path: /shared/validated/demultiplexed.qza
+      sha256: 0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef
+sequencing:
+  read_layout: paired-end
+pipeline:
+  steps: [quality-control]
+```
+
+The artifact type must match the configured read layout. Selecting both Prepare Data and this
+explicit input is rejected as ambiguous. The runtime hashes and inspects the artifact during
+preflight and checks it again immediately before consumption.
 
 - `prefer`: reuse a matching valid result; otherwise compute.
 - `require`: require a matching valid result; fail clearly if none exists.
