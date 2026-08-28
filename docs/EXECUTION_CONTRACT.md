@@ -2,7 +2,7 @@
 
 ## Status
 
-Run isolation is implemented: exclusive `run_id` directories, original/effective parameter snapshots with hashes, source fingerprints, lifecycle/step status, run-scoped temporary ownership, and SIGINT/SIGTERM handling. Prepare Data and Quality Control now have explicit versioned contracts, deterministic dependency planning, and preflight/execution-time artifact checks. The shell activates Conda; Python owns orchestration. Tests use simulated scientific execution, not a validated QIIME 2 run. Later-step contracts, container checks, decision recording, and scientific fixtures remain pending. The repository artifact-policy check runs only in this application's development CI, never in scientific execution.
+Run isolation is implemented: exclusive `run_id` directories, original/effective parameter snapshots with hashes, source fingerprints, lifecycle/step status, run-scoped temporary ownership, and SIGINT/SIGTERM handling. Prepare Data and Quality Control now have explicit versioned contracts, deterministic dependency planning, and preflight/execution-time artifact checks. The shell activates Conda; Python owns orchestration. Tests use simulated scientific execution, not a validated QIIME 2 run. Later-step contracts, container checks, decision recording, and scientific fixtures remain pending. The project imposes no Git restriction based on the `.qza` extension.
 
 ## Experiment versus run
 
@@ -64,7 +64,7 @@ Do not fabricate rationale for a supplied parameter. Missing required review cre
 
 ## Dataset and scientific validation
 
-Select a small public or synthetic dataset with documented origin/license, stable acquisition reference, checksums, marker/read layout, metadata dictionary, legacy revision/environment, and expected acceptance criteria. Keep large FASTQ and all `.qza` outputs outside this application's development Git repository; commit only safe small text fixtures, acquisition instructions, and expected summaries. This does not prescribe Git policy for users' own datasets. Dataset selection remains open.
+Select a small public or synthetic dataset with documented origin/license, stable acquisition reference, checksums, marker/read layout, metadata dictionary, legacy revision/environment, and expected acceptance criteria. Commit only redistributable, reviewed fixtures; whether a `.qza` belongs in Git depends on its purpose, size, license, and sensitivity rather than its extension. Large raw or generated data can still use external storage when appropriate. Dataset selection remains open.
 
 Separate structural tests (fast CI, no QIIME installation) from scientific integration runs in a pinned environment. Compare semantic outputs and scientific metrics rather than requiring identical archive bytes. Define tolerances before reviewing results and document version-driven differences. Cover sample mismatch, invalid parameters, failed/interrupted execution, repeated run isolation, dependencies, and reuse invalidation in addition to a successful example.
 
@@ -72,7 +72,7 @@ Separate structural tests (fast CI, no QIIME installation) from scientific integ
 
 Do not publish arbitrary input metadata, credentials, absolute host paths, or participant identifiers in logs/reports by default. Define an explicit allowlist for report metadata; use pseudonymous sample labels where appropriate. Local raw inputs and detailed provenance may still contain sensitive data and require restricted storage. Hashes and pseudonyms alone do not guarantee anonymity. Review notebooks, captions, manifests, and report exports before sharing; this is not yet an implemented redaction guarantee.
 
-The `.gitignore` excludes `.qza` files only to keep this application's development repository small. `python -m ampliconflow.repository_policy` is a development-only check of the Git index, including force-added files, without reading payloads. It is never called by `run` or `validate`. Users may generate, retain, exchange, or version `.qza` artifacts in their own repositories; no application restriction is imposed on them. Their storage/Git policies are their choice. Structural CI checks this application's current index, not history or external storage; it cannot prevent a local commit or remote upload by itself. Required branch checks remain a separate repository setting.
+The project does not ignore or reject files merely because their extension is `.qza`. Such artifacts may be committed when useful for development or scientific validation. Contributors remain responsible for reviewing file size, provenance, redistribution rights, and sensitive contents. Runtime output directories such as `experiments/`, and general local data directories such as `data/` and `classifiers/`, remain ignored because of their role and expected volume—not because they may contain `.qza` files.
 
 ## Implementation order
 

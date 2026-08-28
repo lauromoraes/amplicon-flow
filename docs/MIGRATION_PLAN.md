@@ -8,7 +8,7 @@ The legacy `lauromoraes/microbiom` project remains the comparison baseline. No a
 - [x] Document the academic PDF requirement and semantic [reporting contract](REPORTING.md).
 - [x] Document the cross-experiment [artifact reuse strategy](ARTIFACT_REUSE.md).
 - [x] Define the target [execution contract](EXECUTION_CONTRACT.md), including run isolation, dependencies, preflight, human decisions, and data safeguards.
-- [x] Add a structural CI check rejecting tracked `.qza` files, including force-added artifacts.
+- [x] Remove extension-based `.qza` Git/CI restrictions; assess artifacts by purpose, size, license, and sensitivity.
 - [ ] Validate these documented contracts with the project owner.
 - [ ] Finalize YAML/path rules, stable step selection, prerequisites, and rerun behavior.
 - [ ] Consolidate the public CLI and validate environment/temporary handling.
@@ -23,7 +23,7 @@ The legacy `lauromoraes/microbiom` project remains the comparison baseline. No a
 
 Documentation checkmarks do not imply executable reporting support or scientific validation. The PDF renderer remains open.
 
-Run isolation now has automated tests for repeated/concurrent attempts, collisions, unsafe paths, snapshot consistency, failure/cancellation, and user `.qza` outputs. Scientific validation with real migrated QIIME 2 notebooks is still pending. The `.qza` CI rule applies only to this application's development repository, not user analysis repositories.
+Run isolation now has automated tests for repeated/concurrent attempts, collisions, unsafe paths, snapshot consistency, failure/cancellation, and `.qza` inputs/outputs. Scientific validation with real migrated QIIME 2 notebooks is still pending. There is no `.qza` extension-based Git or CI restriction.
 
 ## Milestone 1 — Prepare Data + QC/DADA2
 

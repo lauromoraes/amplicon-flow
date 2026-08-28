@@ -16,7 +16,7 @@ See [architecture and open decisions](docs/ARCHITECTURE.md), the [reporting cont
 
 ## Core design
 
-Unique runs, parameter snapshots, lifecycle status, run-scoped temporaries, and the first dependency/preflight contracts are implemented. Prepare Data and Quality Control have explicit artifact contracts; later scientific contracts and recorded decisions remain pending in the [execution contract](docs/EXECUTION_CONTRACT.md). Structural CI rejects tracked `.qza` files **only in this application's development repository**, including files added with `git add -f`. Users may freely generate/store `.qza` artifacts and choose to version them in their own repositories; the runtime never invokes that development check.
+Unique runs, parameter snapshots, lifecycle status, run-scoped temporaries, and the first dependency/preflight contracts are implemented. Prepare Data and Quality Control have explicit artifact contracts; later scientific contracts and recorded decisions remain pending in the [execution contract](docs/EXECUTION_CONTRACT.md). `.qza` files are normal project artifacts: there is no extension-based Git ignore rule or CI prohibition. Contributors may intentionally version suitable fixtures or artifacts, while deciding separately how to store very large data.
 
 - Jupyter notebooks remain the primary analytical units.
 - Papermill executes parameterized notebook templates.

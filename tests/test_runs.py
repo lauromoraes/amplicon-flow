@@ -351,7 +351,7 @@ def test_real_subprocess_receives_run_environment(project, tmp_path, monkeypatch
         )
     scientific_stubs(stub)
     monkeypatch.setenv("PYTHONPATH", str(stub) + os.pathsep + os.environ.get("PYTHONPATH", ""))
-    # User repositories may already track .qza: the runtime never invokes development policy.
+    # Git-backed projects may track .qza files; this does not alter runtime execution.
     subprocess.run(["git", "init", "--quiet", str(root)], check=True)
     (root / "user-input.qza").write_bytes(b"fixture")
     subprocess.run(["git", "add", "user-input.qza"], cwd=root, check=True)

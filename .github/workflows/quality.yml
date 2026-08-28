@@ -9,8 +9,6 @@ jobs:
         with:
           python-version: "3.11"
       - run: python -m pip install -e ".[dev]"
-      - name: Reject tracked QIIME 2 artifacts
-        run: python -m ampliconflow.repository_policy
       - run: pytest
       - run: ruff check src tests
       - run: bash -n ampliconflow

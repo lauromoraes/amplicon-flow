@@ -82,7 +82,7 @@ Pipeline temporary cleanup must never delete published store entries. Deletion i
 
 Provide a future self-contained experiment export that materializes referenced artifacts, records checksums, and includes provenance/report inputs. Plain references save storage during normal work but are not sufficient for long-term independent archival.
 
-Keep large store payloads outside this application's development Git repository. Its `.gitignore` and CI check exclude tracked `*.qza` files only here, not in user projects. Users may choose to version their own `.qza` files; the pipeline does not inspect or reject their Git contents. The development check does not inspect historical commits or prevent upload before CI runs. Do not rewrite historical commits as part of this strategy.
+Keep a shared store independent of Git when payload volume or publication semantics require it, but do not infer storage policy from the `.qza` extension. This repository permits intentional `.qza` fixtures and artifacts. Each contribution should instead be evaluated for size, provenance, redistribution rights, sensitivity, and whether Git or the shared artifact store better represents its lifecycle. Do not rewrite historical commits as part of this strategy.
 
 Isolated `run_id` execution is implemented under the [execution contract](EXECUTION_CONTRACT.md). Future shared entries will remain independent of producer/consumer temporary storage and must never be deleted by run cleanup.
 
