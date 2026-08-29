@@ -19,7 +19,7 @@ The legacy `lauromoraes/microbiom` project remains the comparison baseline. No a
 - [ ] Define reusable-step recipes/manifests, eligibility, policy precedence, and retention/export rules.
 - [ ] Implement and test a shared-filesystem store for classifiers and one eligible pipeline step, including invalidation, integrity, concurrent publication, and provenance.
 - [x] Select and checksum the version-pinned public [reference datasets](REFERENCE_DATASETS.md).
-- [ ] Implement safe acquisition and normalized manifests for both reference datasets.
+- [x] Implement explicit, checksum-verified safe acquisition and normalized manifests for both reference datasets.
 - [ ] Select an owner-provided legacy experiment for historical-equivalence comparison.
 - [ ] Re-run structural tests, lint, shell checks, and CLI validation after infrastructure changes.
 

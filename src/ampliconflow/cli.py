@@ -15,6 +15,7 @@ from .config import (
 )
 from .planning import build_plan
 from .preflight import preflight
+from .reference_data import acquire_reference_dataset, load_registry
 
 
 def _repo_root() -> Path:
@@ -86,6 +87,26 @@ def cmd_preflight(args: argparse.Namespace) -> int:
     return 0 if report["ok"] else 2
 
 
+def cmd_reference_list(_args: argparse.Namespace) -> int:
+    registry = load_registry(_repo_root() / "validation/reference-datasets.yaml")
+    for dataset in registry["datasets"]:
+        print(
+            f"{dataset['id']}\t{dataset['role']}\t{dataset['read_layout']}\t"
+            f"{dataset['sample_count']} samples"
+        )
+    return 0
+
+
+def cmd_reference_fetch(args: argparse.Namespace) -> int:
+    destination = acquire_reference_dataset(
+        _repo_root() / "validation/reference-datasets.yaml",
+        args.dataset,
+        args.destination,
+    )
+    print(f"Reference dataset ready: {destination}")
+    return 0
+
+
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         prog="ampliconflow",
@@ -112,6 +133,19 @@ def build_parser() -> argparse.ArgumentParser:
     preflight_parser.add_argument("parameters")
     preflight_parser.add_argument("--json", action="store_true")
     preflight_parser.set_defaults(func=cmd_preflight)
+
+    reference_parser = subparsers.add_parser(
+        "reference-data", help="List or explicitly acquire scientific reference datasets."
+    )
+    reference_commands = reference_parser.add_subparsers(dest="reference_command", required=True)
+    reference_list = reference_commands.add_parser("list", help="List pinned reference datasets.")
+    reference_list.set_defaults(func=cmd_reference_list)
+    reference_fetch = reference_commands.add_parser(
+        "fetch", help="Download, verify, normalize, and atomically publish one dataset."
+    )
+    reference_fetch.add_argument("dataset")
+    reference_fetch.add_argument("destination")
+    reference_fetch.set_defaults(func=cmd_reference_fetch)
 
     run_parser = subparsers.add_parser(
         "run",
