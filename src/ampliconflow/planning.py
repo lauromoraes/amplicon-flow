@@ -38,6 +38,9 @@ CONTRACTS = {
         ("demultiplexed_sequences",), ("table", "representative_sequences", "denoising_stats")
     ),
 }
+EVIDENCE_OUTPUTS = {
+    "prepare-data": {"quality_summary": "figures/prepare-data/demultiplexed_sequences.qzv"},
+}
 
 
 def build_plan(parameters):
@@ -90,7 +93,7 @@ def build_plan(parameters):
             raise PlanningError("dependency_cycle", "Selected step contracts contain a cycle")
         ordered.append(ready)
         pending.remove(ready)
-    plan = {"contract_version": 1, "requested_steps": list(selected), "steps": []}
+    plan = {"contract_version": 2, "requested_steps": list(selected), "steps": []}
     for step in ordered:
         inputs = {}
         for role in CONTRACTS[step].requires:
@@ -114,6 +117,10 @@ def build_plan(parameters):
                 "depends_on": dependencies[step],
                 "inputs": inputs,
                 "outputs": outputs,
+                "evidence_outputs": {
+                    role: {"path": path} for role, path in EVIDENCE_OUTPUTS.get(step, {}).items()
+                },
+                "report_contribution": f"reports/contributions/{step}.json",
                 "kernel": "python3",
             }
         )

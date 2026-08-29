@@ -31,6 +31,12 @@ Run isolation now has automated tests for repeated/concurrent attempts, collisio
 
 Migrate `01-prepare-data.ipynb`, followed by `02-quality-control.ipynb`, with reporting contributions from the outset. Validate manifest/metadata, imported artifacts, denoising outputs, read retention, ASV counts, and QC diagnostics against the representative legacy experiment. Record expected differences caused by version changes instead of requiring unexplained byte-for-byte identity.
 
+Prepare Data now has an executable template, explicit Phred33 single/paired import contract, demux
+summary, and schema-validated report envelope. Structural acceptance is complete; its migration
+checkbox remains open until it executes on the selected public datasets in the target QIIME 2
+environment and is compared with an owner-selected legacy experiment. Primer trimming from the
+legacy notebook is intentionally deferred to an explicit, separately reviewed contract.
+
 Keep the legacy operational. Advance to subsequent analyses after this pair passes infrastructure and scientific acceptance.
 
 ## Acceptance for each notebook

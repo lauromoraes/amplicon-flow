@@ -61,6 +61,9 @@ def project(tmp_path, monkeypatch):
     (project / "schemas/parameters.schema.json").write_bytes(
         (ROOT / "schemas/parameters.schema.json").read_bytes()
     )
+    (project / "schemas/report-contribution.schema.json").write_bytes(
+        (ROOT / "schemas/report-contribution.schema.json").read_bytes()
+    )
     templates = project / "notebooks/templates"
     templates.mkdir(parents=True)
     notebook = {
@@ -100,6 +103,7 @@ def project(tmp_path, monkeypatch):
                 "base_dir": ".",
                 "inputs": {"metadata_file": "meta.tsv", "manifest_file": "manifest.csv"},
                 "sequencing": {"read_layout": "paired-end"},
+                "prepare_data": {"phred_offset": 33, "quality_plot_reads": 10000},
                 "pipeline": {"steps": ["prepare-data", "quality-control"]},
             }
         ),
@@ -131,6 +135,29 @@ def fake_notebook(command, *, cwd, env):
     assert Path(env["TMPDIR"]).is_dir()
     Path(command[4]).write_text("executed", encoding="utf-8")
     (cwd / "artifacts/result.qza").write_bytes(b"user artifact fixture")
+    step = Path(command[3]).stem.removeprefix("01-").removeprefix("02-")
+    if step == "prepare-data":
+        summary = cwd / "figures/prepare-data/demultiplexed_sequences.qzv"
+        summary.parent.mkdir(parents=True)
+        summary.write_bytes(b"visualization fixture")
+    folder = cwd / "reports/contributions"
+    folder.mkdir(parents=True, exist_ok=True)
+    (folder / f"{step}.json").write_text(
+        json.dumps(
+            {
+                "schema_version": 1,
+                "step": step,
+                "run_id": env["AMPLICONFLOW_RUN_ID"],
+                "created_at": "2026-08-29T00:00:00+00:00",
+                "objective": "Fixture contribution",
+                "methods": {"fixture": True},
+                "outputs": {"fixture": "artifacts/result.qza"},
+                "limitations": [],
+                "references": ["https://example.org/reference"],
+            }
+        ),
+        encoding="utf-8",
+    )
 
 
 def test_repeated_runs_preserve_outputs_and_snapshots(project, monkeypatch):
@@ -333,7 +360,7 @@ def test_real_subprocess_receives_run_environment(project, tmp_path, monkeypatch
     stub = tmp_path / "stub"
     stub.mkdir()
     (stub / "papermill.py").write_text(
-        "import os, pathlib, sys, uuid, zipfile\n"
+        "import json, os, pathlib, sys, uuid, zipfile\n"
         "__version__ = 'fixture'\n"
         "root = pathlib.Path(os.environ['AMPLICONFLOW_RUN_DIR'])\n"
         "assert pathlib.Path.cwd() == root\n"
@@ -348,6 +375,12 @@ def test_real_subprocess_receives_run_environment(project, tmp_path, monkeypatch
             "target = root / 'artifacts/prepare-data/demultiplexed_sequences.qza'\n"
             "with zipfile.ZipFile(target, 'w') as z:\n"
             " z.writestr(identifier + '/metadata.yaml', f'uuid: {identifier}\\ntype: SampleData[PairedEndSequencesWithQuality]\\nformat: FixtureFormat\\n')\n"
+            "reports = root / 'reports/contributions'\n"
+            "reports.mkdir(parents=True, exist_ok=True)\n"
+            "(reports / 'prepare-data.json').write_text(json.dumps({'schema_version': 1, 'step': 'prepare-data', 'run_id': os.environ['AMPLICONFLOW_RUN_ID'], 'created_at': '2026-08-29T00:00:00+00:00', 'objective': 'Fixture', 'methods': {'fixture': True}, 'outputs': {'artifact': 'artifacts/prepare-data/demultiplexed_sequences.qza'}, 'limitations': [], 'references': ['https://example.org/reference']}))\n"
+            "summary = root / 'figures/prepare-data/demultiplexed_sequences.qzv'\n"
+            "summary.parent.mkdir(parents=True, exist_ok=True)\n"
+            "summary.write_bytes(b'visualization fixture')\n"
         )
     scientific_stubs(stub)
     monkeypatch.setenv("PYTHONPATH", str(stub) + os.pathsep + os.environ.get("PYTHONPATH", ""))
@@ -457,7 +490,7 @@ def test_shell_bootstrap_uses_isolated_runner(project, tmp_path):
     stub = tmp_path / "shell-stub"
     stub.mkdir()
     (stub / "papermill.py").write_text(
-        "import os, pathlib, sys, uuid, zipfile\n"
+        "import json, os, pathlib, sys, uuid, zipfile\n"
         "__version__ = 'fixture'\n"
         "if __name__ == '__main__':\n"
         " assert os.environ['CONDA_DEFAULT_ENV'] == 'test-env'\n"
@@ -465,7 +498,13 @@ def test_shell_bootstrap_uses_isolated_runner(project, tmp_path):
         " root = pathlib.Path(os.environ['AMPLICONFLOW_RUN_DIR'])\n"
         " identifier = str(uuid.uuid4())\n"
         " with zipfile.ZipFile(root / 'artifacts/prepare-data/demultiplexed_sequences.qza', 'w') as z:\n"
-        "  z.writestr(identifier + '/metadata.yaml', f'uuid: {identifier}\\ntype: SampleData[PairedEndSequencesWithQuality]\\nformat: FixtureFormat\\n')\n",
+        "  z.writestr(identifier + '/metadata.yaml', f'uuid: {identifier}\\ntype: SampleData[PairedEndSequencesWithQuality]\\nformat: FixtureFormat\\n')\n"
+        " reports = root / 'reports/contributions'\n"
+        " reports.mkdir(parents=True, exist_ok=True)\n"
+        " (reports / 'prepare-data.json').write_text(json.dumps({'schema_version': 1, 'step': 'prepare-data', 'run_id': os.environ['AMPLICONFLOW_RUN_ID'], 'created_at': '2026-08-29T00:00:00+00:00', 'objective': 'Fixture', 'methods': {'fixture': True}, 'outputs': {'artifact': 'artifacts/prepare-data/demultiplexed_sequences.qza'}, 'limitations': [], 'references': ['https://example.org/reference']}))\n"
+        " summary = root / 'figures/prepare-data/demultiplexed_sequences.qzv'\n"
+        " summary.parent.mkdir(parents=True, exist_ok=True)\n"
+        " summary.write_bytes(b'visualization fixture')\n",
         encoding="utf-8",
     )
     scientific_stubs(stub)

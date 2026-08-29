@@ -14,8 +14,9 @@ import yaml
 
 from .config import effective_parameters, get_experiment_name, validate_parameters
 from .paths import create_run_paths
-from .preflight import require_preflight, verify_bindings
+from .preflight import readable_file, require_preflight, verify_bindings
 from .provenance import collect_run_info, sha256_file, write_run_info
+from .reporting import validate_report_contribution
 from .runs import reserve_temporary
 
 
@@ -168,6 +169,21 @@ def run_pipeline(parameters_file, project_dir, *, run_id=None, temp_base=None):
             ):
                 raise RuntimeError("Parameter snapshot was modified during execution")
             active["output_artifacts"] = verify_bindings(contract["outputs"], paths.root)
+            active["evidence_outputs"] = {
+                role: {
+                    "path": binding["path"],
+                    "sha256": sha256_file(readable_file(paths.root / binding["path"])),
+                }
+                for role, binding in contract["evidence_outputs"].items()
+            }
+            contribution_path = paths.root / contract["report_contribution"]
+            active["report_contribution"] = validate_report_contribution(
+                contribution_path,
+                project / "schemas/report-contribution.schema.json",
+                step=name,
+                run_id=paths.run_id,
+                run_root=paths.root,
+            )
             active.update(status="completed", ended_at=utc_now())
             write_run_info(paths.provenance / "run.json", state)
         active = None

@@ -2,9 +2,16 @@
 
 ## Status and objective
 
-Academic PDF reporting is an accepted AmpliconFlow 2.0 requirement, not an implemented feature. It must combine objectives, methodology, methodological rationale, scientific references, and the results actually obtained in an experiment.
+Academic PDF reporting is an accepted AmpliconFlow 2.0 requirement. The first versioned per-step
+contribution schema and runner validation are implemented for migrated notebooks; aggregation and
+PDF rendering remain pending. The final report must combine objectives, methodology,
+methodological rationale, scientific references, and the results actually obtained in an
+experiment.
 
-This document defines the semantic contribution expected from each step. Concrete field names, serialization, validation schema, and rendering engine remain open. Quarto, Pandoc/LaTeX, or other renderers are not yet selected dependencies.
+The minimal concrete envelope is defined in `schemas/report-contribution.schema.json`. It binds a
+contribution to a step and run, and requires objective, methods, existing run-relative outputs,
+limitations, and references. Step-specific result and quality schemas will extend this envelope as
+their notebooks migrate. Quarto, Pandoc/LaTeX, or another renderer is not yet selected.
 
 ## Responsibilities
 
@@ -37,7 +44,9 @@ Elements may be explicitly not applicable with a reason. Missing content must ne
 - **Prepare Data:** manifest/metadata checks, sample/read layout, sample counts, imported artifacts, excluded inputs and reasons where applicable.
 - **QC/DADA2:** effective parameters and rationale, read-retention statistics, merging/chimera diagnostics, ASV counts, sequence-length summaries, figures, and QC limitations.
 
-These are content expectations, not fixed field names or universal thresholds. Establish comparison criteria for the representative experiment before accepting migration.
+The version 1 envelope fixes only shared identity/evidence fields, not universal scientific
+thresholds. Establish step-specific comparison criteria for the representative experiment before
+accepting migration.
 
 ## Aggregation and deliverables
 
@@ -47,7 +56,10 @@ An analysis whose validated outputs were explicitly reused is not an omitted ana
 
 Separate Methods, Results, and Interpretation. Include study/input context, computational provenance, limitations, references, and useful appendices. Preserve commit identity, parameter-file hash, relevant software/plugin versions, database/classifier identity, parameters, executed steps, and timestamps.
 
-The runner now reserves `experiments/<experiment>/runs/<run_id>/reports/` under the [execution contract](EXECUTION_CONTRACT.md), so future reports from repeated attempts cannot overwrite each other. Report rendering, metadata allowlists, and links to scientific decision diagnostics remain to be implemented.
+The runner reserves `experiments/<experiment>/runs/<run_id>/reports/` and refuses to complete a
+migrated step when its contribution is absent, schema-invalid, bound to another run/step, or names
+a missing/empty output outside the run. Report rendering, metadata allowlists, and links to
+scientific decision diagnostics remain to be implemented.
 
 Planned outputs in the run's report directory:
 
