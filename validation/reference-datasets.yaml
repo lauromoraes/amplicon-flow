@@ -1,0 +1,80 @@
+schema_version: 1
+verified_on: "2026-08-28"
+distribution:
+  name: QIIME 2 Tutorial Data
+  license: BSD-3-Clause
+  registry: https://registry.opendata.aws/qiime2/
+
+datasets:
+  - id: pd-mice-2024.10
+    role: primary
+    purpose: [prepare-data-single-end, quality-control-single-end]
+    study:
+      title: Gut Microbiota Regulate Motor Deficits and Neuroinflammation in a Model of Parkinson's Disease
+      doi: https://doi.org/10.1016/j.cell.2016.11.018
+    tutorial: https://docs.qiime2.org/2024.10/tutorials/pd-mice/
+    marker: 16S-rRNA-V4
+    platform: Illumina-MiSeq
+    read_layout: single-end
+    phred_offset: 33
+    sample_count: 48
+    baseline_parameters: {dada2_trunc_len: 150}
+    files:
+      - role: sequences_archive
+        name: demultiplexed_seqs.zip
+        url: https://data.qiime2.org/2024.10/tutorials/pd-mice/demultiplexed_seqs.zip
+        size_bytes: 21508775
+        sha256: 09e46e395102b03b66e721c882dae761f6b4038a7ac36057ad8f47a1a095cf71
+      - role: metadata_source
+        name: sample_metadata.tsv
+        url: https://data.qiime2.org/2024.10/tutorials/pd-mice/sample_metadata.tsv
+        size_bytes: 4431
+        sha256: c0941e1ed49ddaaa485a4b35cea276eb9bc6fcfd0d022ab7003d1aba09d49776
+      - role: manifest_source
+        name: manifest.tsv
+        url: https://data.qiime2.org/2024.10/tutorials/pd-mice/manifest
+        size_bytes: 4640
+        sha256: 71fe982f6be8bf2fadfad74d2c08f3c0006f982f78364a2e57c04e935db129cf
+    preparation:
+      - Rename the metadata identifier header from sample_name to sample-id.
+      - Replace manifest $PWD references with literal absolute paths after extraction.
+      - Preserve all 48 samples; reject any manifest/metadata mismatch.
+
+  - id: atacama-demux-2024.10
+    role: secondary
+    purpose:
+      - prepare-data-paired-end-derived
+      - quality-control-paired-end-external-artifact
+      - explicit-artifact-reuse
+    study:
+      title: Significant Impacts of Increasing Aridity on the Arid Soil Microbiome
+      doi: https://doi.org/10.1128/mSystems.00195-16
+    tutorial: https://docs.qiime2.org/2024.10/tutorials/atacama-soils/
+    marker: 16S-rRNA-V4
+    platform: Illumina-MiSeq
+    read_layout: paired-end
+    phred_offset: 33
+    sample_count: 54
+    baseline_parameters:
+      dada2_trim_left_f: 13
+      dada2_trim_left_r: 13
+      dada2_trunc_len_f: 150
+      dada2_trunc_len_r: 150
+    files:
+      - role: demultiplexed_sequences
+        name: demux.qza
+        url: https://docs.qiime2.org/2024.10/data/tutorials/atacama-soils/demux.qza
+        size_bytes: 28763300
+        sha256: f38e1a86c593f64c1391937e67d3f6e3d7b361b82f80fdd5b79b556e4be9fe10
+        qiime_uuid: 210fed7d-8f02-4cee-b888-166ca00d6581
+        semantic_type: SampleData[PairedEndSequencesWithQuality]
+      - role: metadata_source
+        name: sample_metadata.tsv
+        url: https://data.qiime2.org/2024.10/tutorials/atacama-soils/sample_metadata.tsv
+        size_bytes: 9433
+        sha256: 7cff810ad86a621ebc78a16b690255d839ea58e2622ad45a11a838d0f8c5b3bd
+    preparation:
+      - For external-artifact QC, pin the demux.qza SHA-256 in experiment parameters.
+      - For paired Prepare Data, safely export the 54 FASTQ pairs and generate a V2 manifest.
+      - Subset the 74-sample source metadata to the 54 sample IDs present in the artifact.
+      - Treat the tutorial DADA2 values as baseline decisions, not hidden defaults.
