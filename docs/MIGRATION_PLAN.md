@@ -13,12 +13,14 @@ The legacy `lauromoraes/microbiom` project remains the comparison baseline. No a
 - [ ] Finalize YAML/path rules, stable step selection, prerequisites, and rerun behavior.
 - [ ] Consolidate the public CLI and validate environment/temporary handling.
 - [x] Implement exclusive run directories, application-level write-once snapshots, statuses, and owned run-scoped cleanup; validate with synthetic executors.
-- [ ] Implement dependency planning and structured preflight/execution-time validation.
+- [x] Implement initial Prepare Data/QC dependency planning and structured preflight/execution-time validation.
 - [ ] Implement scientific decision records and explicit metadata-publication controls.
 - [ ] Define the concrete report contribution schema and validation.
 - [ ] Define reusable-step recipes/manifests, eligibility, policy precedence, and retention/export rules.
 - [ ] Implement and test a shared-filesystem store for classifiers and one eligible pipeline step, including invalidation, integrity, concurrent publication, and provenance.
-- [ ] Confirm a representative dataset, legacy revision/outputs, environments, and comparison criteria.
+- [x] Select and checksum the version-pinned public [reference datasets](REFERENCE_DATASETS.md).
+- [ ] Implement safe acquisition and normalized manifests for both reference datasets.
+- [ ] Select an owner-provided legacy experiment for historical-equivalence comparison.
 - [ ] Re-run structural tests, lint, shell checks, and CLI validation after infrastructure changes.
 
 Documentation checkmarks do not imply executable reporting support or scientific validation. The PDF renderer remains open.

@@ -12,7 +12,7 @@ The scaffold is in place; analytical notebooks and PDF reporting are not yet imp
 
 The next milestone is **contract consolidation, then Prepare Data + QC/DADA2**, validated against a representative legacy experiment. An accepted requirement is an **academic PDF report** covering objectives, methods, rationale, results, interpretation, limitations, references, and provenance for the steps actually executed. Each migrated notebook must contribute structured content; retain the report source and manifest alongside the PDF.
 
-See [architecture and open decisions](docs/ARCHITECTURE.md), the [reporting contract](docs/REPORTING.md), and [migration milestones](docs/MIGRATION_PLAN.md). CLI consolidation, final YAML, supported environments, and the PDF renderer are not yet finalized. The command examples below describe the current scaffold.
+See [architecture and open decisions](docs/ARCHITECTURE.md), the [reporting contract](docs/REPORTING.md), the [selected reference datasets](docs/REFERENCE_DATASETS.md), and [migration milestones](docs/MIGRATION_PLAN.md). CLI consolidation, final YAML, supported environments, and the PDF renderer are not yet finalized. The command examples below describe the current scaffold.
 
 ## Core design
 
@@ -55,8 +55,12 @@ ampliconflow/
 │   ├── ARTIFACT_REUSE.md
 │   ├── EXECUTION_CONTRACT.md
 │   ├── MIGRATION_PLAN.md
+│   ├── REFERENCE_DATASETS.md
 │   ├── REPORTING.md
 │   └── NOTEBOOK_STYLE_GUIDE.md
+│
+├── validation/
+│   └── reference-datasets.yaml # pinned scientific acceptance sources
 │
 └── tests/
 ```
