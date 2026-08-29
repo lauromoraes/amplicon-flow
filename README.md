@@ -69,6 +69,19 @@ ampliconflow/
 
 The repository provides an `ampliconflow` runner.
 
+List the pinned scientific acceptance datasets, or acquire one explicitly into an empty local
+destination:
+
+```bash
+python -m ampliconflow.cli reference-data list
+python -m ampliconflow.cli reference-data fetch pd-mice-2024.10 data/reference/pd-mice-2024.10
+```
+
+Acquisition verifies the pinned byte size and SHA-256 of every source, safely extracts supported
+archives, normalizes metadata/manifests, records a hashed inventory, and publishes the completed
+directory atomically. It never runs automatically during `plan`, `preflight`, or `run`, and it
+refuses an existing destination.
+
 Validate a configuration:
 
 ```bash

@@ -7,6 +7,34 @@ acceptance milestone. The machine-readable registry with observed sizes and SHA-
 [`validation/reference-datasets.yaml`](../validation/reference-datasets.yaml). Large source files
 are fetched into a local validation workspace; preflight and normal runs never download them.
 
+## Explicit acquisition
+
+From the repository checkout, list and acquire datasets with:
+
+```bash
+python -m ampliconflow.cli reference-data list
+python -m ampliconflow.cli reference-data fetch pd-mice-2024.10 data/reference/pd-mice-2024.10
+python -m ampliconflow.cli reference-data fetch atacama-demux-2024.10 data/reference/atacama-demux-2024.10
+```
+
+The destination must not exist. Downloading is HTTPS-only and each payload must match its pinned
+size and SHA-256 before normalization. ZIP paths, links, duplicates, entry counts, and expanded
+sizes are constrained; a failure removes only the private staging directory. Successful output is
+published by a same-parent atomic rename and has this shape:
+
+```text
+<destination>/
+├── acquisition.json          # source identity and SHA-256 inventory
+├── metadata.tsv              # normalized metadata
+├── manifest.tsv              # normalized absolute FASTQ paths
+├── inputs/demultiplexed_seqs/
+└── sources/                  # original checksum-pinned downloads
+```
+
+Absolute manifest paths intentionally bind the normalized dataset to its selected destination.
+Move it only by reacquiring it. Dataset acquisition is an explicit maintenance/validation command;
+`plan`, `preflight`, and `run` never trigger network access.
+
 The QIIME 2 Tutorial Data distribution is listed as BSD-3-Clause in the
 [Registry of Open Data on AWS](https://registry.opendata.aws/qiime2/). Each dataset must also cite
 its underlying study. Checksums were computed from files retrieved on 2026-08-28. A changed
@@ -28,7 +56,7 @@ Required deterministic normalization:
 - require exact equality between the 48 metadata and manifest sample IDs.
 
 These transformations change representation, not the samples or scientific data. Normalized files
-receive their own checksums in the future acquisition report. The tutorial is historical 2024.10
+receive their own checksums in `acquisition.json`. The tutorial is historical 2024.10
 documentation, so compatibility with the target 2026.7 environment must be demonstrated.
 
 Sources: [QIIME 2 Parkinson's Mouse tutorial](https://docs.qiime2.org/2024.10/tutorials/pd-mice/)
