@@ -2,7 +2,7 @@
 
 ## Status
 
-Run isolation is implemented: exclusive `run_id` directories, original/effective parameter snapshots with hashes, source fingerprints, lifecycle/step status, run-scoped temporary ownership, and SIGINT/SIGTERM handling. Prepare Data and Quality Control now have explicit versioned contracts, deterministic dependency planning, and preflight/execution-time artifact checks. The shell activates Conda; Python owns orchestration. Tests use simulated scientific execution, not a validated QIIME 2 run. Later-step contracts, container checks, decision recording, and scientific fixtures remain pending. The project imposes no Git restriction based on the `.qza` extension.
+Run isolation is implemented: exclusive `run_id` directories, original/effective parameter snapshots with hashes, source fingerprints, lifecycle/step status, run-scoped temporary ownership, and SIGINT/SIGTERM handling. Prepare Data and Quality Control now have explicit versioned contracts, deterministic dependency planning, and preflight/execution-time artifact checks. Prepare Data has its first executable notebook and mandatory report contribution; scientific execution in QIIME 2 remains pending. The shell activates Conda; Python owns orchestration. Tests use simulated scientific execution, not a validated QIIME 2 run. Later-step contracts, container checks, decision recording, and scientific fixtures remain pending. The project imposes no Git restriction based on the `.qza` extension.
 
 ## Experiment versus run
 

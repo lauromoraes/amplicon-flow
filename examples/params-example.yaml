@@ -11,6 +11,10 @@ sequencing:
 resources:
   threads: 8
 
+prepare_data:
+  phred_offset: 33
+  quality_plot_reads: 10000
+
 pipeline:
   steps:
     - prepare-data

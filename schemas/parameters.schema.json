@@ -72,6 +72,18 @@
       },
       "additionalProperties": true
     },
+    "prepare_data": {
+      "type": "object",
+      "required": ["phred_offset", "quality_plot_reads"],
+      "properties": {
+        "phred_offset": {"const": 33},
+        "quality_plot_reads": {
+          "type": "integer",
+          "minimum": 1
+        }
+      },
+      "additionalProperties": false
+    },
     "pipeline": {
       "type": "object",
       "required": [
@@ -102,5 +114,27 @@
       "additionalProperties": false
     }
   },
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "pipeline": {
+            "properties": {
+              "steps": {"contains": {"const": "prepare-data"}}
+            },
+            "required": ["steps"]
+          }
+        },
+        "required": ["pipeline"]
+      },
+      "then": {
+        "required": ["sequencing", "prepare_data"],
+        "properties": {
+          "inputs": {"required": ["manifest_file"]},
+          "sequencing": {"required": ["read_layout"]}
+        }
+      }
+    }
+  ],
   "additionalProperties": true
 }

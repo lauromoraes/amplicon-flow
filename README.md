@@ -6,7 +6,7 @@ The project is designed around a simple principle: analytical notebooks are not 
 
 > **Status:** early 2.0 architecture. Analytical steps from the previous project are being migrated progressively and validated one at a time.
 
-The scaffold is in place; analytical notebooks and PDF reporting are not yet implemented. The legacy [microbiom project](https://github.com/lauromoraes/microbiom) remains the functional reference.
+The scaffold and the first Prepare Data notebook are in place; scientific acceptance, later analytical notebooks, and PDF rendering are not yet complete. The legacy [microbiom project](https://github.com/lauromoraes/microbiom) remains the functional reference.
 
 ## Next milestone and requirements
 
