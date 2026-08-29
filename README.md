@@ -14,6 +14,11 @@ The next milestone is **contract consolidation, then Prepare Data + QC/DADA2**, 
 
 See [architecture and open decisions](docs/ARCHITECTURE.md), the [reporting contract](docs/REPORTING.md), the [selected reference datasets](docs/REFERENCE_DATASETS.md), and [migration milestones](docs/MIGRATION_PLAN.md). CLI consolidation, final YAML, supported environments, and the PDF renderer are not yet finalized. The command examples below describe the current scaffold.
 
+For the pinned QIIME 2 2026.7 development runtime, see the
+[development image guide](docs/DEVELOPMENT_IMAGE.md). The repository Dockerfile extends the
+official workshop image and verifies both inherited scientific packages and AmpliconFlow's
+additional notebook/development dependencies during the build.
+
 ## Core design
 
 Unique runs, parameter snapshots, lifecycle status, run-scoped temporaries, and the first dependency/preflight contracts are implemented. Prepare Data and Quality Control have explicit artifact contracts; later scientific contracts and recorded decisions remain pending in the [execution contract](docs/EXECUTION_CONTRACT.md). `.qza` files are normal project artifacts: there is no extension-based Git ignore rule or CI prohibition. Contributors may intentionally version suitable fixtures or artifacts, while deciding separately how to store very large data.
