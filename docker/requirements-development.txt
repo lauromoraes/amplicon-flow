@@ -1,0 +1,7 @@
+# Packages absent from, or not version-pinned by, the immutable workshop base.
+# Keep direct requirements exact; review upgrades together with the base digest.
+biopython==1.88
+papermill==2.7.0
+pytest==9.1.1
+ruff==0.16.5
+statannotations==0.7.2
