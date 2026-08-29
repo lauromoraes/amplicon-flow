@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import argparse
-import copy
 import os
 import signal
 import subprocess
@@ -13,25 +12,11 @@ from pathlib import Path
 
 import yaml
 
-from .config import get_experiment_name, get_pipeline_steps, validate_parameters
+from .config import effective_parameters, get_experiment_name, validate_parameters
 from .paths import create_run_paths
+from .preflight import require_preflight, verify_bindings
 from .provenance import collect_run_info, sha256_file, write_run_info
 from .runs import reserve_temporary
-
-# Stable filenames even when the user selects a subset. Dependency planning is separate.
-STEPS = (
-    "prepare-data",
-    "quality-control",
-    "rarefaction-analysis",
-    "metataxonomy",
-    "diversity-analysis",
-    "abundance-analysis",
-    "lefse-analysis",
-    "picrust2-analysis",
-    "ancombc2-analysis",
-    "report",
-)
-TEMPLATES = {step: f"{index:02d}-{step}.ipynb" for index, step in enumerate(STEPS, 1)}
 
 
 class RunCancelled(Exception):
@@ -42,22 +27,6 @@ class RunCancelled(Exception):
 
 def utc_now():
     return datetime.now(UTC).isoformat()
-
-
-def effective_parameters(parameters, source: Path):
-    """Resolve known input paths before moving notebook execution to the run directory."""
-    result = copy.deepcopy(parameters)
-
-    def resolve(value):
-        path = Path(value).expanduser()
-        return str((source.parent / path).resolve())
-
-    result["base_dir"] = resolve(result["base_dir"])
-    for name in ("metadata_file", "manifest_file"):
-        result["inputs"][name] = resolve(result["inputs"][name])
-    if result.get("taxonomy", {}).get("classifier_file"):
-        result["taxonomy"]["classifier_file"] = resolve(result["taxonomy"]["classifier_file"])
-    return result
 
 
 def execute_notebook(command, *, cwd, env):
@@ -94,8 +63,10 @@ def run_pipeline(parameters_file, project_dir, *, run_id=None, temp_base=None):
     validate_parameters(parameters, project / "schemas/parameters.schema.json")
     experiment = get_experiment_name(parameters)
     effective = effective_parameters(parameters, source)
+    preflight = require_preflight(effective, project, temp_base=temp_base)
+    plan = preflight["plan"]
     paths = create_run_paths(project, experiment, run_id)
-    steps = [{"id": name, "status": "planned"} for name in get_pipeline_steps(parameters)]
+    steps = [{"id": item["id"], "status": "planned"} for item in plan["steps"]]
     state = {
         "run_id": paths.run_id,
         "experiment": experiment,
@@ -117,6 +88,8 @@ def run_pipeline(parameters_file, project_dir, *, run_id=None, temp_base=None):
             yaml.safe_dump(effective, handle, sort_keys=True)
         state["original_parameters_sha256"] = sha256_file(paths.parameters / "original.yaml")
         state["effective_parameters_sha256"] = sha256_file(effective_file)
+        write_run_info(paths.provenance / "plan.json", plan)
+        write_run_info(paths.provenance / "preflight.json", preflight)
         state["provenance"] = collect_run_info(
             experiment=experiment,
             parameters_file=effective_file,
@@ -148,6 +121,7 @@ def run_pipeline(parameters_file, project_dir, *, run_id=None, temp_base=None):
                 "AMPLICONFLOW_RUN_ID": paths.run_id,
                 "AMPLICONFLOW_RUN_DIR": str(paths.root),
                 "AMPLICONFLOW_PROJECT_DIR": str(project),
+                "AMPLICONFLOW_PLAN_FILE": str(paths.provenance / "plan.json"),
                 "TMPDIR": str(temporary.root / "qiime2"),
                 "TMP": str(temporary.root / "qiime2"),
                 "TEMP": str(temporary.root / "qiime2"),
@@ -160,13 +134,17 @@ def run_pipeline(parameters_file, project_dir, *, run_id=None, temp_base=None):
         )
         write_run_info(paths.provenance / "run-start.json", state)
         write_run_info(paths.provenance / "run.json", state)
+        planned = {item["id"]: item for item in plan["steps"]}
         for active in steps:
             name = active["id"]
-            template = project / "notebooks/templates" / TEMPLATES[name]
+            contract = planned[name]
+            template = project / "notebooks/templates" / contract["template"]
             active.update(status="running", started_at=utc_now())
             write_run_info(paths.provenance / "run.json", state)
             if not template.is_file():
-                raise FileNotFoundError(f"Step not yet migrated: {template}")
+                raise FileNotFoundError(f"Step template disappeared after preflight: {template}")
+            active["input_artifacts"] = verify_bindings(contract["inputs"], paths.root)
+            (paths.artifacts / name).mkdir(exist_ok=False)
             execute_notebook(
                 [
                     sys.executable,
@@ -176,6 +154,8 @@ def run_pipeline(parameters_file, project_dir, *, run_id=None, temp_base=None):
                     str(paths.notebooks / template.name),
                     "--parameters_file",
                     str(effective_file),
+                    "--kernel",
+                    contract["kernel"],
                 ],
                 cwd=paths.root,
                 env=env,
@@ -187,6 +167,7 @@ def run_pipeline(parameters_file, project_dir, *, run_id=None, temp_base=None):
                 != state["original_parameters_sha256"]
             ):
                 raise RuntimeError("Parameter snapshot was modified during execution")
+            active["output_artifacts"] = verify_bindings(contract["outputs"], paths.root)
             active.update(status="completed", ended_at=utc_now())
             write_run_info(paths.provenance / "run.json", state)
         active = None

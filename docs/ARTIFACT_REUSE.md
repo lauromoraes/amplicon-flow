@@ -2,7 +2,7 @@
 
 ## Status and scope
 
-Cross-experiment reuse is an accepted architectural requirement. This document specifies the strategy; the shared store, configuration, and runtime behavior are not yet implemented.
+Cross-experiment reuse is an accepted architectural requirement. The shared store and automatic lookup/publication are not yet implemented. A first controlled bridge is implemented: Quality Control may consume an explicit demultiplexed `.qza` path pinned by SHA-256, and planning/preflight verify its declared semantic type and refuse ambiguous providers. This does not claim automatic reuse or complete QIIME payload validation.
 
 Use a local or shared-filesystem artifact store independent of experiment outputs and temporary storage. Start with expensive classifiers/reference resources and one validated pipeline step; extend to import, DADA2, and downstream analyses only after their dependency contracts are tested. No database or cloud service is required for the first implementation.
 
@@ -43,6 +43,25 @@ reuse:
   publish: true
 ```
 
+Implemented explicit binding, useful while the shared store is developed:
+
+```yaml
+inputs:
+  metadata_file: metadata.tsv
+  artifacts:
+    demultiplexed_sequences:
+      path: /shared/validated/demultiplexed.qza
+      sha256: 0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef
+sequencing:
+  read_layout: paired-end
+pipeline:
+  steps: [quality-control]
+```
+
+The artifact type must match the configured read layout. Selecting both Prepare Data and this
+explicit input is rejected as ambiguous. The runtime hashes and inspects the artifact during
+preflight and checks it again immediately before consumption.
+
 - `prefer`: reuse a matching valid result; otherwise compute.
 - `require`: require a matching valid result; fail clearly if none exists.
 - `off`: bypass lookup and compute.
@@ -63,7 +82,7 @@ Pipeline temporary cleanup must never delete published store entries. Deletion i
 
 Provide a future self-contained experiment export that materializes referenced artifacts, records checksums, and includes provenance/report inputs. Plain references save storage during normal work but are not sufficient for long-term independent archival.
 
-Keep large store payloads outside this application's development Git repository. Its `.gitignore` and CI check exclude tracked `*.qza` files only here, not in user projects. Users may choose to version their own `.qza` files; the pipeline does not inspect or reject their Git contents. The development check does not inspect historical commits or prevent upload before CI runs. Do not rewrite historical commits as part of this strategy.
+Keep a shared store independent of Git when payload volume or publication semantics require it, but do not infer storage policy from the `.qza` extension. This repository permits intentional `.qza` fixtures and artifacts. Each contribution should instead be evaluated for size, provenance, redistribution rights, sensitivity, and whether Git or the shared artifact store better represents its lifecycle. Do not rewrite historical commits as part of this strategy.
 
 Isolated `run_id` execution is implemented under the [execution contract](EXECUTION_CONTRACT.md). Future shared entries will remain independent of producer/consumer temporary storage and must never be deleted by run cleanup.
 

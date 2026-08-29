@@ -10,9 +10,6 @@ tmp/
 experiments/
 data/
 classifiers/
-# Development repository only: keep large QIIME 2 binaries out of this app's Git history.
-# This is not a runtime restriction or a policy for users' own repositories.
-*.qza
 .vscode/
 .idea/
 .DS_Store

@@ -1,16 +1,20 @@
 from __future__ import annotations
 
 import argparse
+import json
 import os
 from pathlib import Path
 from typing import NoReturn
 
 from .config import (
+    effective_parameters,
     get_experiment_name,
     get_pipeline_steps,
     load_parameters,
     validate_parameters,
 )
+from .planning import build_plan
+from .preflight import preflight
 
 
 def _repo_root() -> Path:
@@ -50,6 +54,38 @@ def cmd_run(args: argparse.Namespace) -> NoReturn:
     os.execvpe("bash", command, env)
 
 
+def _configuration(args):
+    root = _repo_root()
+    source = Path(args.parameters).expanduser().resolve()
+    params = load_parameters(source)
+    validate_parameters(params, root / "schemas/parameters.schema.json")
+    return root, effective_parameters(params, source)
+
+
+def cmd_plan(args: argparse.Namespace) -> int:
+    _root, params = _configuration(args)
+    document = build_plan(params)
+    print(
+        json.dumps(document, indent=2)
+        if args.json
+        else "\n".join(f"{step['id']}: {step['template']}" for step in document["steps"])
+    )
+    return 0
+
+
+def cmd_preflight(args: argparse.Namespace) -> int:
+    root, params = _configuration(args)
+    report = preflight(params, root)
+    if args.json:
+        print(json.dumps(report, indent=2))
+    else:
+        print("Preflight: " + ("ready" if report["ok"] else "not ready"))
+        for kind in ("errors", "warnings"):
+            for item in report[kind]:
+                print(f"  {kind[:-1]} [{item['code']}]: {item['message']}")
+    return 0 if report["ok"] else 2
+
+
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         prog="ampliconflow",
@@ -64,6 +100,18 @@ def build_parser() -> argparse.ArgumentParser:
     )
     validate_parser.add_argument("parameters")
     validate_parser.set_defaults(func=cmd_validate)
+
+    plan_parser = subparsers.add_parser("plan", help="Resolve step contracts without execution.")
+    plan_parser.add_argument("parameters")
+    plan_parser.add_argument("--json", action="store_true")
+    plan_parser.set_defaults(func=cmd_plan)
+
+    preflight_parser = subparsers.add_parser(
+        "preflight", help="Check inputs and the currently active scientific environment."
+    )
+    preflight_parser.add_argument("parameters")
+    preflight_parser.add_argument("--json", action="store_true")
+    preflight_parser.set_defaults(func=cmd_preflight)
 
     run_parser = subparsers.add_parser(
         "run",

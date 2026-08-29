@@ -16,7 +16,7 @@ See [architecture and open decisions](docs/ARCHITECTURE.md), the [reporting cont
 
 ## Core design
 
-Unique runs, parameter snapshots, lifecycle status, and run-scoped temporaries are implemented. Dependency checks, full preflight, and recorded scientific decisions remain pending in the [execution contract](docs/EXECUTION_CONTRACT.md). Structural CI rejects tracked `.qza` files **only in this application's development repository**, including files added with `git add -f`. Users may freely generate/store `.qza` artifacts and choose to version them in their own repositories; the runtime never invokes that development check.
+Unique runs, parameter snapshots, lifecycle status, run-scoped temporaries, and the first dependency/preflight contracts are implemented. Prepare Data and Quality Control have explicit artifact contracts; later scientific contracts and recorded decisions remain pending in the [execution contract](docs/EXECUTION_CONTRACT.md). `.qza` files are normal project artifacts: there is no extension-based Git ignore rule or CI prohibition. Contributors may intentionally version suitable fixtures or artifacts, while deciding separately how to store very large data.
 
 - Jupyter notebooks remain the primary analytical units.
 - Papermill executes parameterized notebook templates.
@@ -71,6 +71,23 @@ Validate a configuration:
 python -m ampliconflow.cli validate examples/params-example.yaml
 ```
 
+Resolve contracts without accessing data or allocating a run:
+
+```bash
+python -m ampliconflow.cli plan examples/params-example.yaml --json
+```
+
+Inside the intended activated QIIME 2 environment, perform the read-only preflight:
+
+```bash
+python -m ampliconflow.cli preflight params-my-study.yaml
+```
+
+Preflight checks the selected templates and active Python/kernel/QIIME/Papermill environment,
+metadata and manifest structure/sample correspondence, FASTQ readability/pairing, explicit artifact
+hash/type, and storage readiness. It does not install software, pull images, execute notebooks, or
+allocate a run. `run` performs this preflight automatically after activating Conda.
+
 Run an experiment:
 
 ```bash
@@ -94,13 +111,13 @@ ampliconflow run params-my-study.yaml rachis-qiime2-2026.7
 
 Each invocation creates `experiments/<experiment>/runs/<run_id>/` under the application checkout. The ID combines a UTC timestamp and UUID; an optional `--run-id ID` can be passed to either run command. An existing ID is refused, never overwritten. Existing legacy experiment directories are left untouched.
 
-Each run contains `parameters/original.yaml`, path-normalized `parameters/effective.yaml`, SHA-256 hashes and source fingerprints in `provenance/`, executed `notebooks/`, `artifacts/`, `figures/`, and `reports/`. `run.json` records current/final status; `run-start.json` and `run-end.json` retain lifecycle snapshots. Failed or cancelled attempts preserve their outputs and diagnostics.
+Each run contains `parameters/original.yaml`, path-normalized `parameters/effective.yaml`, the resolved `provenance/plan.json`, successful `provenance/preflight.json`, SHA-256 hashes and source fingerprints, executed `notebooks/`, `artifacts/`, `figures/`, and `reports/`. `run.json` records current/final status; `run-start.json` and `run-end.json` retain lifecycle snapshots. Failed or cancelled attempts preserve their outputs and diagnostics.
 
 Known input paths (`inputs.metadata_file`, `inputs.manifest_file`, `taxonomy.classifier_file`) and `base_dir` resolve relative to the original YAML, not to the new notebook working directory. This does not relocate the output root: it remains the application checkout for now. Unknown future path fields and scientific defaults require the pending full parameter contract.
 
 Notebook processes start in the run directory and receive `AMPLICONFLOW_RUN_ID`, `AMPLICONFLOW_RUN_DIR`, and `AMPLICONFLOW_PROJECT_DIR`. Templates must save results under the run directory, never reconstruct a shared experiment output path. This is orchestration isolation, not an OS sandbox against notebook code deliberately writing elsewhere.
 
-The initial implementation is tested on Linux/WSL with synthetic notebook executors. Real QIIME 2/Papermill scientific acceptance remains pending; the analytical templates do not exist yet, so running the example currently records a failed attempt for an unmigrated step. Automatic resume/retry linking, dependency validation, and artifact reuse are not implemented.
+The initial implementation is tested on Linux/WSL with synthetic notebook executors. Real QIIME 2/Papermill scientific acceptance remains pending; the analytical templates do not exist yet, so preflight rejects the example without allocating a run. Automatic resume/retry linking and the shared reuse store are not implemented. Quality Control can already consume an explicitly supplied, checksum-pinned compatible demultiplexed artifact; this is a controlled input binding, not automatic cache discovery.
 
 ## Temporary storage
 

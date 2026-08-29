@@ -22,8 +22,7 @@
     "inputs": {
       "type": "object",
       "required": [
-        "metadata_file",
-        "manifest_file"
+        "metadata_file"
       ],
       "properties": {
         "metadata_file": {
@@ -33,6 +32,21 @@
         "manifest_file": {
           "type": "string",
           "minLength": 1
+        },
+        "artifacts": {
+          "type": "object",
+          "properties": {
+            "demultiplexed_sequences": {
+              "type": "object",
+              "required": ["path", "sha256"],
+              "properties": {
+                "path": {"type": "string", "minLength": 1},
+                "sha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"}
+              },
+              "additionalProperties": false
+            }
+          },
+          "additionalProperties": false
         }
       },
       "additionalProperties": true
@@ -43,7 +57,18 @@
         "threads": {
           "type": "integer",
           "minimum": 1
+        },
+        "min_free_bytes": {
+          "type": "integer",
+          "minimum": 0
         }
+      },
+      "additionalProperties": true
+    },
+    "sequencing": {
+      "type": "object",
+      "properties": {
+        "read_layout": {"enum": ["single-end", "paired-end"]}
       },
       "additionalProperties": true
     },
