@@ -124,6 +124,19 @@ ampliconflow validate examples/params-example.yaml
 ampliconflow run params-my-study.yaml rachis-qiime2-2026.7
 ```
 
+## Large classifier distribution
+
+Large QIIME 2 classifiers are distributed as checksum-pinned GitHub Release assets instead of Git
+objects. Publish an artifact from the server that generated it:
+
+```bash
+bash scripts/publish-classifier-release.sh CLASSIFIER.qza classifiers-gtdb-232.0
+```
+
+The command prints the corresponding verified download command. See
+[classifier distribution](docs/CLASSIFIER_DISTRIBUTION.md) for release conventions, provenance
+requirements, and destination options.
+
 ## Isolated executions
 
 Each invocation creates `experiments/<experiment>/runs/<run_id>/` under the application checkout. The ID combines a UTC timestamp and UUID; an optional `--run-id ID` can be passed to either run command. An existing ID is refused, never overwritten. Existing legacy experiment directories are left untouched.
